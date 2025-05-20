@@ -1,0 +1,60 @@
+version: "3.8"
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: planmore_app
+    volumes:
+      - ./:/var/www
+    depends_on:
+      - db
+    ports:
+      - "9000:9000"
+    networks:
+      - planmore
+  node:
+    image: node:20
+    container_name: planmore_node
+    working_dir: /app
+    volumes:
+      - ./:/app
+    command: sh -c "npm install && npm run dev"
+    ports:
+      - "5173:5173"
+    networks:
+      - planmore
+  web:
+    image: nginx:stable-alpine
+    container_name: planmore_web
+    ports:
+      - "8000:80"
+    volumes:
+      - ./:/var/www
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - app
+    networks:
+      - planmore
+
+  db:
+    image: mysql:8.0
+    container_name: planmore_db
+    restart: always
+    environment:
+      MYSQL_DATABASE: planmore
+      MYSQL_ROOT_PASSWORD: root
+    volumes:
+      - dbdata:/var/lib/mysql
+    ports:
+      - "3306:3306"
+    networks:
+      - planmore
+
+networks:
+  planmore:
+
+
+volumes:
+  dbdata:

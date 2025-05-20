@@ -8,6 +8,10 @@ Route::get('/', function () {
     return view('app'); // Carrega o React pelo Blade
 });
 
+Route::get('/register', function () {
+    return view('register'); 
+});
+
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', function () {
         return view('app');
