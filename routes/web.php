@@ -4,22 +4,7 @@ use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return view('app'); // Carrega o React pelo Blade
-});
+Route::get('/{any}', function () {
+    return view('app');
+})->where('any', '.*');
 
-Route::get('/register', function () {
-    return view('register'); 
-});
-
-Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('/dashboard', function () {
-        return view('app');
-    })->name('dashboard');
-
-    Route::get('/profile', function () {
-        return view('app');
-    })->name('profile.edit');
-});
-
-require __DIR__.'/auth.php';
