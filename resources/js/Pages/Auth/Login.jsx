@@ -5,6 +5,7 @@ import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
 import GuestLayout from '@/Layouts/GuestLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
+import  route from 'ziggy-js';
 
 export default function Login({ status, canResetPassword }) {
     const { data, setData, post, processing, errors, reset } = useForm({
@@ -15,10 +16,14 @@ export default function Login({ status, canResetPassword }) {
 
     const submit = (e) => {
         e.preventDefault();
-
         post(route('login'), {
             onFinish: () => reset('password'),
         });
+    };
+
+    const oauthLogin = (provider) => {
+        // usa as rotas nomeadas que criamos no Laravel
+        window.location.href = route('oauth.redirect', { provider });
     };
 
     return (
@@ -34,7 +39,6 @@ export default function Login({ status, canResetPassword }) {
             <form onSubmit={submit}>
                 <div>
                     <InputLabel htmlFor="email" value="Email" />
-
                     <TextInput
                         id="email"
                         type="email"
@@ -45,13 +49,11 @@ export default function Login({ status, canResetPassword }) {
                         isFocused={true}
                         onChange={(e) => setData('email', e.target.value)}
                     />
-
                     <InputError message={errors.email} className="mt-2" />
                 </div>
 
                 <div className="mt-4">
                     <InputLabel htmlFor="password" value="Password" />
-
                     <TextInput
                         id="password"
                         type="password"
@@ -61,7 +63,6 @@ export default function Login({ status, canResetPassword }) {
                         autoComplete="current-password"
                         onChange={(e) => setData('password', e.target.value)}
                     />
-
                     <InputError message={errors.password} className="mt-2" />
                 </div>
 
@@ -95,6 +96,30 @@ export default function Login({ status, canResetPassword }) {
                     </PrimaryButton>
                 </div>
             </form>
+
+            {/* --- bloco de login social --- */}
+            <div className="mt-8">
+                <div className="mb-3 text-center text-sm text-gray-500">
+                    ou entre com
+                </div>
+                <div className="flex gap-3 justify-center">
+                    <button
+                        type="button"
+                        onClick={() => oauthLogin('google')}
+                        className="px-4 py-2 rounded-md border text-sm hover:bg-gray-50"
+                    >
+                        Google
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => oauthLogin('github')}
+                        className="px-4 py-2 rounded-md border text-sm hover:bg-gray-50"
+                    >
+                        GitHub
+                    </button>
+                </div>
+            </div>
+            {/* --- fim bloco de login social --- */}
         </GuestLayout>
     );
 }
