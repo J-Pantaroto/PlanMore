@@ -23,7 +23,6 @@ class DashboardController extends Controller
 
         $saldoAtual = $totalIncome - $totalExpense;
 
-        // Obtém os gastos e receitas categorizados
         $categorias = Transaction::where('user_id', $userId)
             ->selectRaw('category, SUM(amount) as total')
             ->groupBy('category')

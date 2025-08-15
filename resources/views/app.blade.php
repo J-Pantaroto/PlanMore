@@ -12,6 +12,7 @@
 
         <!-- Scripts -->
         @viteReactRefresh
+        @routes
         @vite(['resources/js/app.jsx'])
     </head>
     <body class="bg-gray-100">
