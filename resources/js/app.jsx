@@ -1,18 +1,18 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+
 import Welcome from "./Pages/Welcome";
 import Dashboard from "./Pages/Dashboard";
-import { Ziggy } from './ziggy';
 import Register from "./Pages/Auth/Register";
 import Profile from "./Pages/Profile";
+
 import '../css/app.css';
 import './bootstrap';
 
 
 function App() {
     return (
-        <ZiggyReactProvider ziggy={Ziggy} location={window.location.href}>
             <Router>
                 <Routes>
                     <Route path="/" element={<Welcome />} />
@@ -21,7 +21,6 @@ function App() {
                     <Route path="/register" element={<Register />} />
                 </Routes>
             </Router>
-        </ZiggyReactProvider>
     );
 }
 

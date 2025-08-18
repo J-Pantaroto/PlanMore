@@ -1,55 +1,84 @@
-import InputError from '@/Components/InputError';
-import PrimaryButton from '@/Components/PrimaryButton';
-import TextInput from '@/Components/TextInput';
-import GuestLayout from '@/Layouts/GuestLayout';
-import { Head, useForm } from '@inertiajs/react';
+import { useState } from "react";
+import route from "ziggy-js";
+import InputError from "@/Components/InputError";
+import PrimaryButton from "@/Components/PrimaryButton";
+import TextInput from "@/Components/TextInput";
+import GuestLayout from "@/Layouts/GuestLayout";
 
-export default function ForgotPassword({ status }) {
-    const { data, setData, post, processing, errors } = useForm({
-        email: '',
-    });
+export default function ForgotPassword() {
+  const [data, setData] = useState({ email: "" });
+  const [errors, setErrors] = useState({});
+  const [processing, setProcessing] = useState(false);
+  const [status, setStatus] = useState("");
 
-    const submit = (e) => {
-        e.preventDefault();
+  const submit = async (e) => {
+    e.preventDefault();
+    setProcessing(true);
+    setErrors({});
+    setStatus("");
 
-        post(route('password.email'));
-    };
+    try {
+      await fetch(route("sanctum.csrf-cookie"), { credentials: "include" });
 
-    return (
-        <GuestLayout>
-            <Head title="Forgot Password" />
+      const res = await fetch(route("password.email"), {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Requested-With": "XMLHttpRequest",
+        },
+        body: JSON.stringify({ email: data.email }),
+      });
 
-            <div className="mb-4 text-sm text-gray-600">
-                Forgot your password? No problem. Just let us know your email
-                address and we will email you a password reset link that will
-                allow you to choose a new one.
-            </div>
+      if (res.status === 422) {
+        const json = await res.json();
+        setErrors(json.errors || {});
+      } else if (res.ok) {
+        setStatus("Enviamos um link de redefinição de senha para o seu e-mail!");
+        setData({ email: "" });
+      } else {
+        console.error("Erro ao solicitar redefinição:", await res.text());
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setProcessing(false);
+    }
+  };
 
-            {status && (
-                <div className="mb-4 text-sm font-medium text-green-600">
-                    {status}
-                </div>
-            )}
+  return (
+    <GuestLayout>
+      <div className="mb-4 text-sm text-gray-600">
+        Esqueceu sua senha? Sem problemas. Informe seu endereço de e-mail e nós
+        enviaremos um link para redefinição de senha, onde você poderá escolher
+        uma nova.
+      </div>
 
-            <form onSubmit={submit}>
-                <TextInput
-                    id="email"
-                    type="email"
-                    name="email"
-                    value={data.email}
-                    className="mt-1 block w-full"
-                    isFocused={true}
-                    onChange={(e) => setData('email', e.target.value)}
-                />
+      {status && (
+        <div className="mb-4 text-sm font-medium text-green-600">{status}</div>
+      )}
 
-                <InputError message={errors.email} className="mt-2" />
+      <form onSubmit={submit}>
+        <TextInput
+          id="email"
+          type="email"
+          name="email"
+          value={data.email}
+          className="mt-1 block w-full"
+          autoComplete="username"
+          isFocused={true}
+          onChange={(e) => setData({ email: e.target.value })}
+          required
+        />
 
-                <div className="mt-4 flex items-center justify-end">
-                    <PrimaryButton className="ms-4" disabled={processing}>
-                        Email Password Reset Link
-                    </PrimaryButton>
-                </div>
-            </form>
-        </GuestLayout>
-    );
+        <InputError message={errors.email?.[0]} className="mt-2" />
+
+        <div className="mt-4 flex items-center justify-end">
+          <PrimaryButton className="ms-4" disabled={processing}>
+            {processing ? "Enviando..." : "Enviar link de redefinição"}
+          </PrimaryButton>
+        </div>
+      </form>
+    </GuestLayout>
+  );
 }
