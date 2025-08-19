@@ -5,9 +5,9 @@ export default function Welcome() {
         <div className="h-screen flex">
             {/* Lado esquerdo - Ilustra */}
             <div className="w-1/2 hidden md:flex items-center justify-center">
-                <img 
-                    src="/img/welcome-illustration.png" 
-                    alt="Ilustração PlanMore"/>
+                <img
+                    src="/img/welcome-illustration.png"
+                    alt="Ilustração PlanMore" />
             </div>
 
             {/* Lado direito - Login */}
@@ -20,17 +20,26 @@ export default function Welcome() {
 
                 {/* Botões de Login */}
                 <div className="w-full max-w-sm space-y-3">
-                    <button className="w-full flex items-center justify-center border rounded-lg py-3 shadow-sm hover:bg-lightpurple">
+                    <button
+                        className="w-full flex items-center justify-center border rounded-lg py-3 shadow-sm hover:bg-lightpurple"
+                        onClick={() => window.location.href = "http://localhost:8000/auth/google"}
+                    >
                         <img src="/img/google-icon.png" alt="Google" className="w-5 h-5 mr-2" />
                         Entrar com Google
                     </button>
-                    
-                    <button className="w-full flex items-center justify-center border rounded-lg py-3 shadow-sm hover:bg-lightpurple">
+
+                    <button
+                        className="w-full flex items-center justify-center border rounded-lg py-3 shadow-sm hover:bg-lightpurple"
+                        onClick={() => window.location.href = "http://localhost:8000/auth/github"}
+                    >
                         <img src="/img/github-icon.png" alt="GitHub" className="w-5 h-5 mr-2" />
                         Entrar com GitHub
                     </button>
 
-                    <button className="w-full flex items-center justify-center border rounded-lg py-3 shadow-sm hover:bg-lightpurple">
+                    <button
+                        className="w-full flex items-center justify-center border rounded-lg py-3 shadow-sm hover:bg-lightpurple"
+                        onClick={() => window.location.href = "/login"}
+                    >
                         <img src="/img/email-icon.png" alt="Email" className="w-5 h-5 mr-2" />
                         Entrar com Email
                     </button>

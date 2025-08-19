@@ -22,9 +22,10 @@ export default function Register() {
     setErrors({});
 
     try {
-      await fetch(route("sanctum.csrf-cookie"), { credentials: "include" });
-
-      const res = await fetch(route("register"), {
+      await fetch("http://localhost:8000/sanctum/csrf-cookie", {
+        credentials: "include",
+      });
+      const res = await fetch("http://localhost:8000/register", {
         method: "POST",
         credentials: "include",
         headers: {
@@ -54,7 +55,7 @@ export default function Register() {
       {/* Coluna da imagem */}
       <div className="w-1/2 hidden md:flex items-center justify-center bg-gray-100">
         <img
-          src="/images/register-bg.png"
+          src="/images/register-bg.jpg"
           alt="Join us"
           className="max-w-md rounded-lg"
         />

@@ -15,18 +15,43 @@ Route::middleware('auth')->group(function () {
     })->name('dashboard');
 });
 
-Route::middleware('guest')->group(function () {
-    Route::get('/auth/{provider}/redirect', [OAuthController::class, 'redirect'])
-        ->whereIn('provider', ['google', 'github'])
-        ->name('oauth.redirect');
 
-    Route::get('/auth/{provider}/callback', [OAuthController::class, 'callback'])
-        ->whereIn('provider', ['google', 'github'])
-        ->name('oauth.callback');
-});
 
 require __DIR__ . '/auth.php';
 
+// Google
+Route::get('/auth/google', function () {
+    return Socialite::driver('google')->redirect();
+});
+Route::get('/auth/google/callback', function () {
+    $googleUser = Socialite::driver('google')->user();
+
+    $user = User::updateOrCreate(
+        ['email' => $googleUser->getEmail()],
+        ['name' => $googleUser->getName()]
+    );
+
+    Auth::login($user);
+
+    return redirect('/dashboard');
+});
+
+// GitHub
+Route::get('/auth/github', function () {
+    return Socialite::driver('github')->redirect();
+});
+Route::get('/auth/github/callback', function () {
+    $githubUser = Socialite::driver('github')->user();
+
+    $user = User::updateOrCreate(
+        ['email' => $githubUser->getEmail()],
+        ['name' => $githubUser->getName()]
+    );
+
+    Auth::login($user);
+
+    return redirect('/dashboard');
+});
 
 Route::get('/{any}', function () {
     return view('app');
