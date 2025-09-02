@@ -16,6 +16,12 @@ export default function Register() {
   const [errors, setErrors] = useState({});
   const [processing, setProcessing] = useState(false);
 
+function getCookie(name) {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop().split(';').shift();
+}
+
   const submit = async (e) => {
     e.preventDefault();
     setProcessing(true);
@@ -25,12 +31,15 @@ export default function Register() {
       await fetch("http://localhost:8000/sanctum/csrf-cookie", {
         credentials: "include",
       });
+      const csrfToken = decodeURIComponent(getCookie("XSRF-TOKEN"));
+
       const res = await fetch("http://localhost:8000/register", {
         method: "POST",
         credentials: "include",
         headers: {
           "Content-Type": "application/json",
           "X-Requested-With": "XMLHttpRequest",
+          "X-XSRF-TOKEN": csrfToken
         },
         body: JSON.stringify(data),
       });
@@ -39,7 +48,8 @@ export default function Register() {
         const json = await res.json();
         setErrors(json.errors || {});
       } else if (res.ok) {
-        window.location.href = route("dashboard");
+        const json = await res.json();
+        window.location.href = json.redirect || route("dashboard");
       } else {
         console.error("Falha no registro:", await res.text());
       }

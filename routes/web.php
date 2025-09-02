@@ -2,7 +2,10 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProfileController;
+use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Auth\OAuthController;
+use Laravel\Socialite\Facades\Socialite;
+use App\Models\User;
 
 
 Route::middleware('auth')->group(function () {
@@ -43,15 +46,25 @@ Route::get('/auth/github', function () {
 Route::get('/auth/github/callback', function () {
     $githubUser = Socialite::driver('github')->user();
 
+    logger()->info('GitHub User', [
+        'id' => $githubUser->getId(),
+        'nickname' => $githubUser->getNickname(),
+        'name' => $githubUser->getName(),
+        'email' => $githubUser->getEmail(),
+    ]);
+
     $user = User::updateOrCreate(
         ['email' => $githubUser->getEmail()],
-        ['name' => $githubUser->getName()]
+        [
+            'name' => $githubUser->getName() ?? $githubUser->getNickname(),
+        ]
     );
 
     Auth::login($user);
 
     return redirect('/dashboard');
 });
+
 
 Route::get('/{any}', function () {
     return view('app');

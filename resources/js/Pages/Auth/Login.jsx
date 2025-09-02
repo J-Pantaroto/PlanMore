@@ -119,7 +119,7 @@ export default function Login({ status = "", canResetPassword = true }) {
             </Link>
           )}
 
-          <PrimaryButton className="ms-4" disabled={processing}>
+          <PrimaryButton className="bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-4 rounded-lg" disabled={processing}>
             {processing ? "Entrando..." : "Entrar"}
           </PrimaryButton>
         </div>
@@ -133,14 +133,14 @@ export default function Login({ status = "", canResetPassword = true }) {
         <div className="flex justify-center gap-3">
           <button
             type="button"
-            onClick={() => oauthLogin("google")}
+            onClick={() => window.location.href = "http://localhost:8000/auth/google"}
             className="rounded-md border px-4 py-2 text-sm hover:bg-gray-50"
           >
             Google
           </button>
           <button
             type="button"
-            onClick={() => oauthLogin("github")}
+            onClick={() => window.location.href = "http://localhost:8000/auth/github"}
             className="rounded-md border px-4 py-2 text-sm hover:bg-gray-50"
           >
             GitHub

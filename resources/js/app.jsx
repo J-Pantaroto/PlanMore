@@ -6,6 +6,8 @@ import Welcome from "./Pages/Welcome";
 import Dashboard from "./Pages/Dashboard";
 import Register from "./Pages/Auth/Register";
 import Profile from "./Pages/Profile";
+import Login from "./Pages/Auth/Login";
+import VerifyEmail from "./Pages/Auth/VerifyEmail";
 
 import '../css/app.css';
 import './bootstrap';
@@ -19,6 +21,8 @@ function App() {
                     <Route path="/dashboard" element={<Dashboard />} />
                     <Route path="/profile" element={<Profile />} />
                     <Route path="/register" element={<Register />} />
+                    <Route path="/login" element={<Login />} />
+                    <Route path="/verify-email" element={<VerifyEmail />} />
                 </Routes>
             </Router>
     );

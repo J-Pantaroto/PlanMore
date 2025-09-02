@@ -1,6 +1,5 @@
 import { useState } from "react";
-import route from "ziggy-js";
-
+import { route } from 'ziggy-js';
 import PrimaryButton from "@/Components/PrimaryButton";
 import GuestLayout from "@/Layouts/GuestLayout";
 
@@ -68,7 +67,7 @@ export default function VerifyEmail({ initialStatus = "" }) {
 
       <form onSubmit={submit}>
         <div className="mt-4 flex items-center justify-between">
-          <PrimaryButton disabled={processing}>
+          <PrimaryButton className="bg-purple-600 hover:bg-purple-700 text-white font-semibold" disabled={processing}>
             {processing ? "Reenviando..." : "Reenviar link de verificação"}
           </PrimaryButton>
 
