@@ -8,6 +8,7 @@ import Register from "./Pages/Auth/Register";
 import Profile from "./Pages/Profile";
 import Login from "./Pages/Auth/Login";
 import VerifyEmail from "./Pages/Auth/VerifyEmail";
+import ForgotPassword from "./Pages/Auth/ForgotPassword";
 
 import '../css/app.css';
 import './bootstrap';
@@ -23,6 +24,7 @@ function App() {
                     <Route path="/register" element={<Register />} />
                     <Route path="/login" element={<Login />} />
                     <Route path="/verify-email" element={<VerifyEmail />} />
+                    <Route path="/forgot-password" element={<ForgotPassword />} />
                 </Routes>
             </Router>
     );

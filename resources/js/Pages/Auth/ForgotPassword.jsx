@@ -1,5 +1,5 @@
 import { useState } from "react";
-import route from "ziggy-js";
+import { route } from 'ziggy-js';
 import InputError from "@/Components/InputError";
 import PrimaryButton from "@/Components/PrimaryButton";
 import TextInput from "@/Components/TextInput";
@@ -11,33 +11,43 @@ export default function ForgotPassword() {
   const [processing, setProcessing] = useState(false);
   const [status, setStatus] = useState("");
 
+  function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+  }
+
   const submit = async (e) => {
     e.preventDefault();
     setProcessing(true);
     setErrors({});
-    setStatus("");
 
     try {
-      await fetch(route("sanctum.csrf-cookie"), { credentials: "include" });
+      await fetch("http://localhost:8000/sanctum/csrf-cookie", {
+        credentials: "include",
+      });
 
-      const res = await fetch(route("password.email"), {
+      const csrfToken = decodeURIComponent(getCookie("XSRF-TOKEN"));
+
+      const res = await fetch("http://localhost:8000/password/email", {
         method: "POST",
         credentials: "include",
         headers: {
           "Content-Type": "application/json",
           "X-Requested-With": "XMLHttpRequest",
+          "X-XSRF-TOKEN": csrfToken,
         },
-        body: JSON.stringify({ email: data.email }),
+        body: JSON.stringify(data),
       });
 
       if (res.status === 422) {
         const json = await res.json();
         setErrors(json.errors || {});
       } else if (res.ok) {
-        setStatus("Enviamos um link de redefinição de senha para o seu e-mail!");
-        setData({ email: "" });
+        const json = await res.json();
+        window.location.href = json.redirect || route("dashboard");
       } else {
-        console.error("Erro ao solicitar redefinição:", await res.text());
+        console.error("Falha ao solicitar redefinição:", await res.text());
       }
     } catch (err) {
       console.error(err);
@@ -45,6 +55,7 @@ export default function ForgotPassword() {
       setProcessing(false);
     }
   };
+
 
   return (
     <GuestLayout>
@@ -74,7 +85,7 @@ export default function ForgotPassword() {
         <InputError message={errors.email?.[0]} className="mt-2" />
 
         <div className="mt-4 flex items-center justify-end">
-          <PrimaryButton className="ms-4" disabled={processing}>
+          <PrimaryButton className="bg-purple-600 hover:bg-purple-700 text-white font-semibold ms-4" disabled={processing}>
             {processing ? "Enviando..." : "Enviar link de redefinição"}
           </PrimaryButton>
         </div>
