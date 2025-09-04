@@ -25,11 +25,17 @@ export default function Login({ status = "", canResetPassword = true }) {
     try {
       await fetch(route("sanctum.csrf-cookie"), { credentials: "include" });
 
+      const xsrfToken = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('XSRF-TOKEN='))
+        ?.split('=')[1];
+
       const res = await fetch(route("login"), {
         method: "POST",
         credentials: "include",
         headers: {
           "Content-Type": "application/json",
+          "X-XSRF-TOKEN": decodeURIComponent(xsrfToken),
           "X-Requested-With": "XMLHttpRequest",
         },
         body: JSON.stringify({
@@ -43,7 +49,6 @@ export default function Login({ status = "", canResetPassword = true }) {
         const json = await res.json();
         setErrors(json.errors || {});
       } else if (res.ok) {
-        // redireciona após login
         window.location.href = route("dashboard");
       } else {
         console.error("Falha no login:", await res.text());
@@ -55,10 +60,6 @@ export default function Login({ status = "", canResetPassword = true }) {
     }
   };
 
-  const oauthLogin = (provider) => {
-    // redireciona para a rota nomeada do OAuth no Laravel
-    window.location.href = route("oauth.redirect", { provider });
-  };
 
   return (
     <GuestLayout>

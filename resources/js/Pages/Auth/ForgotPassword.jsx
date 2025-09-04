@@ -29,7 +29,7 @@ export default function ForgotPassword() {
 
       const csrfToken = decodeURIComponent(getCookie("XSRF-TOKEN"));
 
-      const res = await fetch("http://localhost:8000/password/email", {
+      const res = await fetch("http://localhost:8000/forgot-password", {
         method: "POST",
         credentials: "include",
         headers: {
@@ -47,7 +47,8 @@ export default function ForgotPassword() {
         const json = await res.json();
         window.location.href = json.redirect || route("dashboard");
       } else {
-        console.error("Falha ao solicitar redefinição:", await res.text());
+        const errorText = await res.text();
+        console.error("Falha ao solicitar redefinição:", errorText);
       }
     } catch (err) {
       console.error(err);
@@ -55,7 +56,6 @@ export default function ForgotPassword() {
       setProcessing(false);
     }
   };
-
 
   return (
     <GuestLayout>

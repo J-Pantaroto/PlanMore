@@ -8,6 +8,7 @@ import Register from "./Pages/Auth/Register";
 import Profile from "./Pages/Profile";
 import Login from "./Pages/Auth/Login";
 import VerifyEmail from "./Pages/Auth/VerifyEmail";
+import EditProfile from "./Pages/Profile/EditProfile";
 import ForgotPassword from "./Pages/Auth/ForgotPassword";
 
 import '../css/app.css';
@@ -20,6 +21,7 @@ function App() {
                 <Routes>
                     <Route path="/" element={<Welcome />} />
                     <Route path="/dashboard" element={<Dashboard />} />
+                    <Route exact path="/profile/edit" element={<EditProfile />} />
                     <Route path="/profile" element={<Profile />} />
                     <Route path="/register" element={<Register />} />
                     <Route path="/login" element={<Login />} />

@@ -13,20 +13,23 @@ use Inertia\Response;
 
 class ProfileController extends Controller
 {
-    /**
-     * Display the user's profile form.
-     */
-    public function edit(Request $request): Response
+
+    public function edit(Request $request)
     {
-        return Inertia::render('Profile/Edit', [
-            'mustVerifyEmail' => $request->user() instanceof MustVerifyEmail,
-            'status' => session('status'),
+        $user = $request->user();
+         if (!$user) {
+            \Log::info('Usuário não autenticado ou sessão expirada');
+            return response()->json(['message' => 'Usuário não autenticado'], 401);  // Retorne 401 se o usuário não estiver autenticado
+        }
+
+        \Log::info('Dados do usuário', ['user' => $user]);
+        return response()->json([
+            'name' => $user->name,
+            'email' => $user->email,
         ]);
     }
 
-    /**
-     * Update the user's profile information.
-     */
+
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
         $request->user()->fill($request->validated());
