@@ -20,6 +20,12 @@ return new class extends Migration {
             $table->boolean('is_recurring')->default(false);
             $table->boolean('is_active')->default(true);
             $table->date('date');
+            $table->uuid('batch_id')->nullable();
+            $table->foreignId('group_id')->nullable()->constrained('groups')->nullOnDelete();
+            $table->enum('recurrence_interval', ['daily','weekly','monthly','yearly'])->nullable();
+            $table->date('recurrence_end_date')->nullable();
+            $table->index('batch_id');
+            $table->index(['user_id','date']);
             $table->timestamps();
         });
     }

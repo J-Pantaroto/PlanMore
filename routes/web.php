@@ -16,6 +16,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/dashboard', function () {
         return view('app');
     })->name('dashboard');
+
+
+    Route::get('/transactions', function () {
+        return view('app');
+    })->name('transactions');
 });
 
 
