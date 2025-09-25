@@ -6,6 +6,22 @@ window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 
 let __csrfReady;
 
+
+axios.interceptors.response.use(
+  response => response,
+  error => {
+    if (error.response && error.response.status === 401) {
+
+      router.visit('/login');
+    }
+    if (error.response && error.response.status === 419) {
+
+      router.visit('/login');
+    }
+    return Promise.reject(error);
+  }
+);
+
 export function ensureCsrf() {
   if (!__csrfReady) {
     __csrfReady = fetch("/sanctum/csrf-cookie", {
