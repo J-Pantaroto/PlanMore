@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { route } from "ziggy-js";
+import Swal from "sweetalert2"; // 🔹 import SweetAlert
 import InputError from "@/Components/InputError";
-import ApplicationLogo from '@/Components/ApplicationLogo';
+import ApplicationLogo from "@/Components/ApplicationLogo";
 import TextInput from "@/Components/TextInput";
 import PrimaryButton from "@/Components/PrimaryButton";
 import { Link } from "react-router-dom";
@@ -13,19 +14,17 @@ export default function Register() {
     password: "",
     password_confirmation: "",
   });
-  const [errors, setErrors] = useState({});
   const [processing, setProcessing] = useState(false);
 
-function getCookie(name) {
-  const value = `; ${document.cookie}`;
-  const parts = value.split(`; ${name}=`);
-  if (parts.length === 2) return parts.pop().split(';').shift();
-}
+  function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(";").shift();
+  }
 
   const submit = async (e) => {
     e.preventDefault();
     setProcessing(true);
-    setErrors({});
 
     try {
       await fetch("http://localhost:8000/sanctum/csrf-cookie", {
@@ -39,22 +38,47 @@ function getCookie(name) {
         headers: {
           "Content-Type": "application/json",
           "X-Requested-With": "XMLHttpRequest",
-          "X-XSRF-TOKEN": csrfToken
+          "X-XSRF-TOKEN": csrfToken,
         },
         body: JSON.stringify(data),
       });
 
       if (res.status === 422) {
         const json = await res.json();
-        setErrors(json.errors || {});
+        Swal.fire({
+          icon: "error",
+          title: "Erro no cadastro",
+          text:
+            json?.errors?.email?.[0] ||
+            json?.errors?.password?.[0] ||
+            "Verifique os dados e tente novamente.",
+          confirmButtonColor: "#d33",
+        });
       } else if (res.ok) {
         const json = await res.json();
-        window.location.href = json.redirect || route("dashboard");
+        Swal.fire({
+          icon: "success",
+          title: "Conta criada!",
+          text: "Seu cadastro foi realizado com sucesso.",
+          confirmButtonColor: "#3085d6",
+        }).then(() => {
+          window.location.href = json.redirect || route("dashboard");
+        });
       } else {
-        console.error("Falha no registro:", await res.text());
+        Swal.fire({
+          icon: "error",
+          title: "Erro inesperado",
+          text: "Não foi possível concluir o cadastro.",
+          confirmButtonColor: "#d33",
+        });
       }
     } catch (err) {
-      console.error(err);
+      Swal.fire({
+        icon: "error",
+        title: "Erro de conexão",
+        text: "Não foi possível conectar ao servidor.",
+        confirmButtonColor: "#d33",
+      });
     } finally {
       setProcessing(false);
     }
@@ -96,7 +120,6 @@ function getCookie(name) {
                 onChange={(e) => setData({ ...data, name: e.target.value })}
                 required
               />
-              <InputError message={errors.name?.[0]} className="mt-2" />
             </div>
 
             <div>
@@ -110,7 +133,6 @@ function getCookie(name) {
                 onChange={(e) => setData({ ...data, email: e.target.value })}
                 required
               />
-              <InputError message={errors.email?.[0]} className="mt-2" />
             </div>
 
             <div>
@@ -124,7 +146,6 @@ function getCookie(name) {
                 onChange={(e) => setData({ ...data, password: e.target.value })}
                 required
               />
-              <InputError message={errors.password?.[0]} className="mt-2" />
             </div>
 
             <div>
@@ -140,17 +161,13 @@ function getCookie(name) {
                 }
                 required
               />
-              <InputError
-                message={errors.password_confirmation?.[0]}
-                className="mt-2"
-              />
             </div>
 
             <PrimaryButton
               className="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-4 rounded-lg"
               disabled={processing}
             >
-              Cadastrar
+              {processing ? "Cadastrando..." : "Cadastrar"}
             </PrimaryButton>
 
             <div className="text-center text-sm text-gray-600">

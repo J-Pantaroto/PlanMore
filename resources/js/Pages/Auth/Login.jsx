@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { route } from 'ziggy-js';
+import { route } from "ziggy-js";
+import Swal from "sweetalert2";
 import Checkbox from "@/Components/Checkbox";
 import InputError from "@/Components/InputError";
 import InputLabel from "@/Components/InputLabel";
@@ -14,21 +15,19 @@ export default function Login({ status = "", canResetPassword = true }) {
     password: "",
     remember: false,
   });
-  const [errors, setErrors] = useState({});
   const [processing, setProcessing] = useState(false);
 
   const submit = async (e) => {
     e.preventDefault();
     setProcessing(true);
-    setErrors({});
 
     try {
       await fetch(route("sanctum.csrf-cookie"), { credentials: "include" });
 
       const xsrfToken = document.cookie
-        .split('; ')
-        .find(row => row.startsWith('XSRF-TOKEN='))
-        ?.split('=')[1];
+        .split("; ")
+        .find((row) => row.startsWith("XSRF-TOKEN="))
+        ?.split("=")[1];
 
       const res = await fetch(route("login"), {
         method: "POST",
@@ -46,20 +45,34 @@ export default function Login({ status = "", canResetPassword = true }) {
       });
 
       if (res.status === 422) {
-        const json = await res.json();
-        setErrors(json.errors || {});
+        Swal.fire({
+          icon: "error",
+          title: "Erro no login",
+          text: "Login ou senha incorretos.",
+          confirmButtonColor: "#d33",
+          confirmButtonText: "Tentar novamente",
+        });
       } else if (res.ok) {
         window.location.href = route("dashboard");
       } else {
-        console.error("Falha no login:", await res.text());
+        Swal.fire({
+          icon: "error",
+          title: "Erro inesperado",
+          text: "Ocorreu um problema, tente novamente.",
+          confirmButtonColor: "#d33",
+        });
       }
     } catch (err) {
-      console.error(err);
+      Swal.fire({
+        icon: "error",
+        title: "Erro de conexão",
+        text: "Não foi possível conectar ao servidor.",
+        confirmButtonColor: "#d33",
+      });
     } finally {
       setProcessing(false);
     }
   };
-
 
   return (
     <GuestLayout>
@@ -81,7 +94,6 @@ export default function Login({ status = "", canResetPassword = true }) {
             onChange={(e) => setData({ ...data, email: e.target.value })}
             required
           />
-          <InputError message={errors.email?.[0]} className="mt-2" />
         </div>
 
         <div className="mt-4">
@@ -96,7 +108,6 @@ export default function Login({ status = "", canResetPassword = true }) {
             onChange={(e) => setData({ ...data, password: e.target.value })}
             required
           />
-          <InputError message={errors.password?.[0]} className="mt-2" />
         </div>
 
         <div className="mt-4 block">
@@ -120,7 +131,10 @@ export default function Login({ status = "", canResetPassword = true }) {
             </Link>
           )}
 
-          <PrimaryButton className="bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-4 rounded-lg" disabled={processing}>
+          <PrimaryButton
+            className="bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-4 rounded-lg"
+            disabled={processing}
+          >
             {processing ? "Entrando..." : "Entrar"}
           </PrimaryButton>
         </div>
@@ -128,20 +142,22 @@ export default function Login({ status = "", canResetPassword = true }) {
 
       {/* --- bloco de login social --- */}
       <div className="mt-8">
-        <div className="mb-3 text-center text-sm text-gray-500">
-          ou entre com
-        </div>
+        <div className="mb-3 text-center text-sm text-gray-500">ou entre com</div>
         <div className="flex justify-center gap-3">
           <button
             type="button"
-            onClick={() => window.location.href = "http://localhost:8000/auth/google"}
+            onClick={() =>
+              (window.location.href = "http://localhost:8000/auth/google")
+            }
             className="rounded-md border px-4 py-2 text-sm hover:bg-gray-50"
           >
             Google
           </button>
           <button
             type="button"
-            onClick={() => window.location.href = "http://localhost:8000/auth/github"}
+            onClick={() =>
+              (window.location.href = "http://localhost:8000/auth/github")
+            }
             className="rounded-md border px-4 py-2 text-sm hover:bg-gray-50"
           >
             GitHub

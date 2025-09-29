@@ -23,7 +23,9 @@ export default function Shell({ children }) {
   );
   const [openTx, setOpenTx] = useState(isTxSectionActive);
 
-  useEffect(() => { setOpenTx(isTxSectionActive); }, [isTxSectionActive]);
+  useEffect(() => {
+    setOpenTx(isTxSectionActive);
+  }, [isTxSectionActive]);
 
   return (
     <div className="min-h-screen flex bg-gray-50 text-slate-900">
@@ -43,7 +45,7 @@ export default function Shell({ children }) {
           <div className="space-y-1">
             <button
               type="button"
-              onClick={() => setOpenTx(v => !v)}
+              onClick={() => setOpenTx((v) => !v)}
               className={itemClass(isTxSectionActive)}
               aria-expanded={openTx}
             >
@@ -53,19 +55,29 @@ export default function Shell({ children }) {
                 className={`w-4 h-4 transition-transform ${openTx ? "rotate-180" : ""}`}
                 viewBox="0 0 20 20" fill="currentColor"
               >
-                <path d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 011.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/>
+                <path d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 011.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" />
               </svg>
             </button>
 
             {openTx && (
               <div className="ml-3 pl-2 border-l border-slate-200 space-y-1">
-                <NavLink to="/transactions" className={({ isActive }) => subItemClass(isActive)}>
+                <NavLink
+                  to="/transactions"
+                  end // 🔹 garante que só ativa se for exatamente /transactions
+                  className={({ isActive }) => subItemClass(isActive)}
+                >
                   Visão geral
                 </NavLink>
-                <NavLink to="/transactions/groups" className={({ isActive }) => subItemClass(isActive)}>
+                <NavLink
+                  to="/transactions/groups"
+                  className={({ isActive }) => subItemClass(isActive)}
+                >
                   Grupos
                 </NavLink>
-                <NavLink to="/transactions/automation" className={({ isActive }) => subItemClass(isActive)}>
+                <NavLink
+                  to="/transactions/automation"
+                  className={({ isActive }) => subItemClass(isActive)}
+                >
                   Automatização
                 </NavLink>
               </div>
