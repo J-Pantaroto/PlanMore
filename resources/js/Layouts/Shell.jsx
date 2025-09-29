@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { NavLink, Link, useLocation } from "react-router-dom";
+import Swal from "sweetalert2";
 
 function itemClass(isActive) {
   return [
@@ -27,16 +28,57 @@ export default function Shell({ children }) {
     setOpenTx(isTxSectionActive);
   }, [isTxSectionActive]);
 
+  const handleLogout = async () => {
+    try {
+      const res = await fetch("/logout", {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "X-Requested-With": "XMLHttpRequest",
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (res.ok) {
+        Swal.fire({
+          icon: "success",
+          title: "Até logo!",
+          text: "Você saiu da sua conta.",
+          timer: 2000,
+          showConfirmButton: false,
+        }).then(() => {
+          window.location.href = "/login";
+        });
+      } else {
+        Swal.fire({
+          icon: "error",
+          title: "Erro",
+          text: "Não foi possível sair da conta.",
+        });
+      }
+    } catch (err) {
+      console.error(err);
+      Swal.fire({
+        icon: "error",
+        title: "Erro",
+        text: "Falha na comunicação com o servidor.",
+      });
+    }
+  };
+
   return (
     <div className="min-h-screen flex bg-gray-50 text-slate-900">
       {/* Sidebar */}
-      <aside className="w-56 shrink-0 bg-white border-r border-slate-200 p-5">
-        <Link to="/dashboard" className="flex items-center gap-2 text-lg font-semibold mb-7">
+      <aside className="w-56 shrink-0 bg-white border-r border-slate-200 p-5 flex flex-col">
+        <Link
+          to="/dashboard"
+          className="flex items-center gap-2 text-lg font-semibold mb-7"
+        >
           <img src="/favicon.ico" alt="" className="w-6 h-6" />
           <span>PlanMore</span>
         </Link>
 
-        <nav className="space-y-2">
+        <nav className="space-y-2 flex-1">
           <NavLink to="/dashboard" className={({ isActive }) => itemClass(isActive)}>
             <span>📊</span> <span>Dashboard</span>
           </NavLink>
@@ -63,7 +105,7 @@ export default function Shell({ children }) {
               <div className="ml-3 pl-2 border-l border-slate-200 space-y-1">
                 <NavLink
                   to="/transactions"
-                  end // 🔹 garante que só ativa se for exatamente /transactions
+                  end
                   className={({ isActive }) => subItemClass(isActive)}
                 >
                   Visão geral
@@ -91,6 +133,14 @@ export default function Shell({ children }) {
             <span>👤</span> <span>Conta</span>
           </NavLink>
         </nav>
+
+        {/* Botão Logout */}
+        <button
+          onClick={handleLogout}
+          className="mt-6 w-full bg-red-600 text-white py-2 px-3 rounded-lg hover:bg-red-700"
+        >
+          Sair
+        </button>
       </aside>
 
       {/* Content */}

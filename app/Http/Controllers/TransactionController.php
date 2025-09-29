@@ -47,9 +47,9 @@ class TransactionController extends Controller
     {
         $data = $request->validate([
             'type' => 'required|in:entrada,saida',
-            'amount' => 'required|numeric|min:0',
-            'category_id' => 'nullable|exists:categories,id',
-            'group_id' => 'nullable|exists:groups,id',
+            'amount' => 'required|numeric|min:0.01',
+            'category_id' => 'required', 'exists:categorias,id',
+            'group_id' => 'required|exists:groups,id',
             'description' => 'nullable|string|max:1000',
             'is_fixed' => 'boolean',
             'is_installment' => 'boolean',

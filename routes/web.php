@@ -13,7 +13,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::patch('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-
+    Route::post('/logout', function (\Illuminate\Http\Request $request) {
+        Auth::guard('web')->logout();
+        $request->session()->invalidate();
+        $request->session->regenerateToken();
+        return response()->json(['message' => 'Logout realizado']);
+    });
     Route::get('/dashboard', function () {
         return view('app');
     })->name('dashboard');
