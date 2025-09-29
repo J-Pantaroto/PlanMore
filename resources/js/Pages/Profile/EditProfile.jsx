@@ -1,19 +1,30 @@
-import React, { useState, useEffect } from 'react';
-import Shell from '../../Layouts/Shell';
-
+import React, { useState, useEffect } from "react";
+import Shell from "../../Layouts/Shell";
+import { ensureCsrf } from "@/bootstrap";
 export default function EditProfile() {
-  const [profile, setProfile] = useState({ name: '', email: '', password: '' });
+  const [profile, setProfile] = useState({ name: "", email: "" });
   const [errors, setErrors] = useState({});
   const [processing, setProcessing] = useState(false);
 
+  const [passwordData, setPasswordData] = useState({
+    current_password: "",
+    password: "",
+    password_confirmation: "",
+  });
+
   useEffect(() => {
-    fetch('/profile', { method: 'GET', credentials: 'include' })
+    fetch("/profile", { method: "GET", credentials: "include" })
       .then((res) => {
-        if (!res.ok) throw new Error('Erro ao carregar perfil');
+        if (!res.ok) throw new Error("Erro ao carregar perfil");
         return res.json();
       })
-      .then((data) => setProfile({ name: data.name || '', email: data.email || '', password: '' }))
-      .catch((err) => console.error('Erro ao carregar perfil:', err));
+      .then((data) =>
+        setProfile({
+          name: data.name || "",
+          email: data.email || "",
+        })
+      )
+      .catch((err) => console.error("Erro ao carregar perfil:", err));
   }, []);
 
   const handleChange = (e) => {
@@ -21,26 +32,85 @@ export default function EditProfile() {
     setProfile((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = async (e) => {
+  const getCookie = (name) => {
+    const m = document.cookie.match(
+      new RegExp(
+        "(^|; )" +
+          name.replace(/([.$?*|{}()[\]\\/+^])/g, "\\$1") +
+          "=([^;]*)"
+      )
+    );
+    return m ? m[2] : null;
+  };
+
+  const handleSubmitProfile = async (e) => {
     e.preventDefault();
     setProcessing(true);
     setErrors({});
     try {
-      const res = await fetch('/profile', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      await ensureCsrf();
+      const xsrf = getCookie("XSRF-TOKEN");
+
+      const res = await fetch("/profile", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          "X-XSRF-TOKEN": decodeURIComponent(xsrf),
+          "X-Requested-With": "XMLHttpRequest",
+        },
         body: JSON.stringify(profile),
-        credentials: 'include',
+        credentials: "include",
       });
 
       if (res.status === 422) {
         const json = await res.json();
         setErrors(json.errors || {});
       } else if (!res.ok) {
-        console.error('Falha ao atualizar perfil:', await res.text());
+        console.error("Falha ao atualizar perfil:", await res.text());
       }
     } catch (err) {
-      console.error('Erro ao enviar dados:', err);
+      console.error("Erro ao enviar dados:", err);
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  const handleSubmitPassword = async (e) => {
+    e.preventDefault();
+    setProcessing(true);
+    setErrors({});
+    try {
+      await ensureCsrf();
+      const xsrf = getCookie("XSRF-TOKEN");
+
+      const res = await fetch("/profile/password", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          "X-XSRF-TOKEN": decodeURIComponent(xsrf),
+          "X-Requested-With": "XMLHttpRequest",
+        },
+        body: JSON.stringify(passwordData),
+        credentials: "include",
+      });
+
+      if (res.status === 422) {
+        const json = await res.json();
+        setErrors(json.errors || {});
+      } else if (res.ok) {
+        alert("Senha alterada com sucesso!");
+        setPasswordData({
+          current_password: "",
+          password: "",
+          password_confirmation: "",
+        });
+      } else {
+        console.error("Falha ao atualizar senha:", await res.text());
+      }
+    } catch (err) {
+      console.error("Erro ao enviar dados:", err);
     } finally {
       setProcessing(false);
     }
@@ -50,32 +120,36 @@ export default function EditProfile() {
     <Shell>
       <h1 className="text-2xl font-bold mb-8">Gerenciar Perfil</h1>
 
-      <form onSubmit={handleSubmit} className="space-y-6 max-w-xl">
+      {/* Formulário de dados do perfil */}
+      <form onSubmit={handleSubmitProfile} className="space-y-6 max-w-xl">
         <div>
-          <label htmlFor="name" className="block text-sm font-medium text-gray-700">Nome</label>
+          <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+            Nome
+          </label>
           <input
-            type="text" id="name" name="name" value={profile.name} onChange={handleChange}
+            type="text"
+            id="name"
+            name="name"
+            value={profile.name}
+            onChange={handleChange}
             className="mt-1 block w-full p-2 border border-gray-300 rounded-md"
           />
           {errors.name && <div className="text-red-500 text-sm">{errors.name}</div>}
         </div>
 
         <div>
-          <label htmlFor="email" className="block text-sm font-medium text-gray-700">Endereço de E-mail</label>
+          <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+            Endereço de E-mail
+          </label>
           <input
-            type="email" id="email" name="email" value={profile.email} onChange={handleChange}
+            type="email"
+            id="email"
+            name="email"
+            value={profile.email}
+            onChange={handleChange}
             className="mt-1 block w-full p-2 border border-gray-300 rounded-md"
           />
           {errors.email && <div className="text-red-500 text-sm">{errors.email}</div>}
-        </div>
-
-        <div>
-          <label htmlFor="password" className="block text-sm font-medium text-gray-700">Senha</label>
-          <input
-            type="password" id="password" name="password" value={profile.password} onChange={handleChange}
-            className="mt-1 block w-full p-2 border border-gray-300 rounded-md"
-          />
-          {errors.password && <div className="text-red-500 text-sm">{errors.password}</div>}
         </div>
 
         <button
@@ -83,7 +157,85 @@ export default function EditProfile() {
           className="w-full py-2 px-4 bg-violet-700 text-white rounded-md hover:bg-violet-800"
           disabled={processing}
         >
-          {processing ? 'Salvando...' : 'Salvar'}
+          {processing ? "Salvando..." : "Salvar Perfil"}
+        </button>
+      </form>
+
+      {/* Formulário de alteração de senha */}
+      <h2 className="text-xl font-semibold mt-12 mb-6">Alterar Senha</h2>
+      <form onSubmit={handleSubmitPassword} className="space-y-6 max-w-xl">
+        <div>
+          <label
+            htmlFor="current_password"
+            className="block text-sm font-medium text-gray-700"
+          >
+            Senha atual
+          </label>
+          <input
+            type="password"
+            id="current_password"
+            name="current_password"
+            value={passwordData.current_password}
+            onChange={(e) =>
+              setPasswordData({ ...passwordData, current_password: e.target.value })
+            }
+            className="mt-1 block w-full p-2 border border-gray-300 rounded-md"
+          />
+          {errors.current_password && (
+            <div className="text-red-500 text-sm">{errors.current_password}</div>
+          )}
+        </div>
+
+        <div>
+          <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+            Nova senha
+          </label>
+          <input
+            type="password"
+            id="password"
+            name="password"
+            value={passwordData.password}
+            onChange={(e) =>
+              setPasswordData({ ...passwordData, password: e.target.value })
+            }
+            className="mt-1 block w-full p-2 border border-gray-300 rounded-md"
+          />
+          {errors.password && <div className="text-red-500 text-sm">{errors.password}</div>}
+        </div>
+
+        <div>
+          <label
+            htmlFor="password_confirmation"
+            className="block text-sm font-medium text-gray-700"
+          >
+            Confirmar nova senha
+          </label>
+          <input
+            type="password"
+            id="password_confirmation"
+            name="password_confirmation"
+            value={passwordData.password_confirmation}
+            onChange={(e) =>
+              setPasswordData({
+                ...passwordData,
+                password_confirmation: e.target.value,
+              })
+            }
+            className="mt-1 block w-full p-2 border border-gray-300 rounded-md"
+          />
+          {errors.password_confirmation && (
+            <div className="text-red-500 text-sm">
+              {errors.password_confirmation}
+            </div>
+          )}
+        </div>
+
+        <button
+          type="submit"
+          className="w-full py-2 px-4 bg-violet-700 text-white rounded-md hover:bg-violet-800"
+          disabled={processing}
+        >
+          {processing ? "Salvando..." : "Alterar Senha"}
         </button>
       </form>
     </Shell>

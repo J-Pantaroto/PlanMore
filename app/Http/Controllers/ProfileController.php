@@ -8,6 +8,8 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -63,4 +65,26 @@ class ProfileController extends Controller
 
         return Redirect::to('/');
     }
+
+public function updatePassword(Request $request)
+{
+    $request->validate([
+        'current_password' => ['required'],
+        'password' => ['required', 'confirmed', 'min:8'],
+    ]);
+
+    $user = $request->user();
+
+    if (!Hash::check($request->current_password, $user->password)) {
+        throw ValidationException::withMessages([
+            'current_password' => 'A senha atual está incorreta.',
+        ]);
+    }
+
+    $user->password = Hash::make($request->password);
+    $user->save();
+
+    return response()->json(['message' => 'Senha alterada com sucesso']);
+}
+
 }
