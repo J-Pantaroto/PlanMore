@@ -11,11 +11,35 @@ use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\GroupController;
 
+use App\Models\Transaction;
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', function (Request $request) {
         return $request->user();
+
     });
+
+Route::middleware('auth:sanctum')->get('/dashboard', function (Request $request) {
+    $user = $request->user();
+
+    $month = $request->query('month', now()->format('Y-m'));
+    [$year, $mon] = explode('-', $month);
+
+    $query = Transaction::where('user_id', $user->id)
+        ->whereYear('date', $year)
+        ->whereMonth('date', $mon);
+
+    $receita = (clone $query)->where('type', 'entrada')->sum('amount');
+    $despesa = (clone $query)->where('type', 'saida')->sum('amount');
+    $saldo   = $receita - $despesa;
+
+    return response()->json([
+        'month'   => $month,
+        'receita' => $receita,
+        'despesa' => $despesa,
+        'saldo'   => $saldo,
+    ]);
+});
 
     // Transactions CRUD
     Route::get('/transactions', [TransactionController::class, 'index']);

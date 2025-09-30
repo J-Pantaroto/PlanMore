@@ -47,4 +47,54 @@ class User extends Authenticatable implements MustVerifyEmail
             'password' => 'hashed',
         ];
     }
+    public function categories()
+    {
+        return $this->hasMany(Category::class);
+    }
+
+    public function groups()
+    {
+        return $this->hasMany(Group::class);
+    }
+
+    protected static function booted()
+    {
+        static::created(function ($user) {
+            try {
+                // Categorias padrão
+                $defaultCategories = [
+                    ['name' => 'Alimentação', 'type' => 'saida'],
+                    ['name' => 'Transporte',  'type' => 'saida'],
+                    ['name' => 'Moradia',     'type' => 'saida'],
+                    ['name' => 'Educação',    'type' => 'saida'],
+                    ['name' => 'Saúde',       'type' => 'saida'],
+                    ['name' => 'Salário',     'type' => 'entrada'],
+                    ['name' => 'Investimentos','type' => 'entrada'],
+                ];
+
+                foreach ($defaultCategories as $cat) {
+                    \App\Models\Category::firstOrCreate([
+                        'user_id' => $user->id,
+                        'name'    => $cat['name'],
+                        'type'    => $cat['type'],
+                    ]);
+                }
+
+                // Grupos padrão
+                $defaultGroups = ['Pessoal', 'Trabalho', 'Família'];
+
+                foreach ($defaultGroups as $grp) {
+                    \App\Models\Group::firstOrCreate([
+                        'user_id' => $user->id,
+                        'name'    => $grp,
+                    ]);
+                }
+            } catch (\Throwable $e) {
+                \Log::error('Erro ao criar categorias/grupos padrão para o usuário', [
+                    'user_id' => $user->id,
+                    'error'   => $e->getMessage(),
+                ]);
+            }
+        });
+    }
 }
