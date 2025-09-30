@@ -2,27 +2,51 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Transaction;
 use Illuminate\Http\Request;
+use App\Models\Transaction;
+use Illuminate\Support\Facades\Auth;
 use Maatwebsite\Excel\Facades\Excel;
 use Barryvdh\DomPDF\Facade\Pdf;
-use App\Exports\TransactionsExport;
-use Illuminate\Support\Facades\Auth;
-
 
 class ExportController extends Controller
 {
     public function exportExcel()
     {
-        return Excel::download(new TransactionsExport, 'gastos-ganhos.xlsx');
+        $userId = Auth::id();
+
+        $transactions = Transaction::where('user_id', $userId)->get();
+
+        $callback = function () use ($transactions) {
+            $file = fopen('php://output', 'w');
+            fputcsv($file, ['Data', 'Tipo', 'Valor', 'Categoria']);
+            foreach ($transactions as $t) {
+                fputcsv($file, [
+                    $t->date,
+                    $t->type,
+                    $t->amount,
+                    optional($t->category)->name ?? '-',
+                ]);
+            }
+            fclose($file);
+        };
+
+        return response()->streamDownload($callback, 'transacoes.csv', [
+            'Content-Type' => 'text/csv',
+        ]);
     }
 
     public function exportPDF()
     {
-        $transactions = Transaction::where('user_id', Auth::id())->get();
+        $userId = Auth::id();
 
-        $pdf = Pdf::loadView('exports.transactions', compact('transactions'));
+        $transactions = Transaction::with('category')
+            ->where('user_id', $userId)
+            ->get();
 
-        return $pdf->download('relatorio-financeiro.pdf');
+        $pdf = Pdf::loadView('exports.transactions', [
+            'transactions' => $transactions,
+        ]);
+
+        return $pdf->download('transacoes.pdf');
     }
 }

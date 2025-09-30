@@ -1,10 +1,10 @@
 <?php
-
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Transaction;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
@@ -12,7 +12,11 @@ class DashboardController extends Controller
     {
         $userId = Auth::id();
 
-        // Obtém o saldo total
+        if (!$userId) {
+            return response()->json(['error' => 'Usuário não autenticado'], 401);
+        }
+
+        // Totais
         $totalIncome = Transaction::where('user_id', $userId)
             ->where('type', 'entrada')
             ->sum('amount');
@@ -23,15 +27,17 @@ class DashboardController extends Controller
 
         $saldoAtual = $totalIncome - $totalExpense;
 
-        $categorias = Transaction::where('user_id', $userId)
-            ->selectRaw('category, SUM(amount) as total')
-            ->groupBy('category')
+        // Categorias (JOIN com categories)
+        $categorias = Transaction::where('transactions.user_id', $userId)
+            ->join('categories', 'transactions.category_id', '=', 'categories.id')
+            ->select('categories.name as categoria', DB::raw('SUM(transactions.amount) as total'))
+            ->groupBy('categories.name')
             ->get();
 
         return response()->json([
-            'saldo_atual' => $saldoAtual,
-            'total_entradas' => $totalIncome,
-            'total_saidas' => $totalExpense,
+            'saldo_atual' => (float) $saldoAtual,
+            'total_entradas' => (float) $totalIncome,
+            'total_saidas' => (float) $totalExpense,
             'categorias' => $categorias
         ]);
     }

@@ -47,6 +47,7 @@ export default function Shell({ children }) {
         headers: {
           "X-Requested-With": "XMLHttpRequest",
           "Content-Type": "application/json",
+          "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').getAttribute("content"),
         },
       });
 
