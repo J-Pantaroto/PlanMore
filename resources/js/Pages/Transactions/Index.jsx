@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState, useCallback } from "react";
 import Shell from "../../Layouts/Shell";
 import { api } from "../../bootstrap";
+import Swal from "sweetalert2";
 
 const money = (n) =>
   (Number(n) || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -65,15 +66,15 @@ export default function TransactionsIndex() {
 
   const [openModal, setOpenModal] = useState(false);
   const [modalForm, setModalForm] = useState({
-    tipo: "Despesa", 
+    tipo: "Despesa",
     category_id: "",
     group_id: "",
     valor: "",
-    datetime: `${yyyy}-${mm}-${dd}T${hh}:${min}`, // UI datetime-local
+    datetime: `${yyyy}-${mm}-${dd}T${hh}:${min}`,
     observacao: "",
     recorrente: false,
-    intervalo: "monthly", // daily|weekly|monthly|yearly
-    fim: "", // date (YYYY-MM-DD)
+    intervalo: "monthly",
+    fim: "",
     parcelado: false,
     parcelas: 1,
   });
@@ -129,6 +130,15 @@ export default function TransactionsIndex() {
   );
 
   async function saveFromModal() {
+    if (!modalForm.category_id) {
+      Swal.fire("Categoria obrigatória", "Selecione uma categoria para continuar.", "warning");
+      return;
+    }
+    if (!modalForm.valor || Number(modalForm.valor) <= 0) {
+      Swal.fire("Valor inválido", "Informe um valor maior que zero.", "warning");
+      return;
+    }
+
     try {
       const apiPayload = {
         type: modalForm.tipo === "Receita" ? "entrada" : "saida",
@@ -136,7 +146,7 @@ export default function TransactionsIndex() {
         category_id: modalForm.category_id || null,
         group_id: modalForm.group_id || null,
         description: modalForm.observacao || "",
-        date: String(modalForm.datetime).slice(0, 10), // API espera 'YYYY-MM-DD'
+        date: String(modalForm.datetime).slice(0, 10),
         is_installment: !!modalForm.parcelado,
         installments: modalForm.parcelado ? Number(modalForm.parcelas || 1) : undefined,
         is_recurring: !!modalForm.recorrente,
@@ -145,34 +155,16 @@ export default function TransactionsIndex() {
       };
 
       await api("/api/transactions", { method: "POST", body: apiPayload });
+
+      Swal.fire("Sucesso", "Transação cadastrada com sucesso!", "success");
+
       setOpenModal(false);
       resetModal();
       setPage(1);
       await fetchAll();
     } catch (e) {
-      console.error(e);
-      alert(e?.message || "Erro ao salvar.");
+      Swal.fire("Erro", e?.message || "Erro ao salvar a transação.", "error");
     }
-  }
-
-  function startEdit(row) {
-    setEditingId(row.id);
-    setEditForm({
-      type: row.type,
-      amount: row.amount,
-      category_id: row.category_id || "",
-      group_id: row.group_id || "",
-      description: row.description || "",
-      is_fixed: !!row.is_fixed,
-      is_installment: !!row.is_installment,
-      installments: row.installments || 1,
-      installment_number: row.installment_number || null,
-      is_recurring: !!row.is_recurring,
-      recurrence_interval: row.recurrence_interval || "monthly",
-      recurrence_end_date: row.recurrence_end_date || "",
-      is_active: !!row.is_active,
-      date: row.date,
-    });
   }
 
   async function saveEdit(id) {
@@ -187,35 +179,55 @@ export default function TransactionsIndex() {
         delete payload.recurrence_end_date;
       }
       await api(`/api/transactions/${id}`, { method: "PUT", body: payload });
+
+      Swal.fire("Atualizado", "Transação editada com sucesso!", "success");
+
       setEditingId(null);
       await fetchAll();
     } catch (e) {
-      alert(e?.message || "Erro ao atualizar.");
+      Swal.fire("Erro", e?.message || "Erro ao atualizar.", "error");
     }
   }
 
-  function cancelEdit() {
-    setEditingId(null);
-    setEditForm({});
-  }
-
   async function remove(id) {
-    if (!confirm("Excluir esta transação?")) return;
+    const confirm = await Swal.fire({
+      title: "Excluir transação?",
+      text: "Essa ação não pode ser desfeita.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Sim, excluir",
+      cancelButtonText: "Cancelar",
+    });
+
+    if (!confirm.isConfirmed) return;
+
     try {
       await api(`/api/transactions/${id}`, { method: "DELETE" });
+      Swal.fire("Excluída", "Transação removida com sucesso!", "success");
       await fetchAll();
     } catch (e) {
-      alert(e?.message || "Erro ao excluir.");
+      Swal.fire("Erro", e?.message || "Erro ao excluir.", "error");
     }
   }
 
   async function removeBatch(id) {
-    if (!confirm("Excluir o lote inteiro (todas as parcelas/ocorrências)?")) return;
+    const confirm = await Swal.fire({
+      title: "Excluir lote inteiro?",
+      text: "Isso vai apagar todas as parcelas/ocorrências ligadas.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Sim, excluir tudo",
+      cancelButtonText: "Cancelar",
+    });
+
+    if (!confirm.isConfirmed) return;
+
     try {
       await api(`/api/transactions/${id}?delete_batch=1`, { method: "DELETE" });
+      Swal.fire("Excluído", "Lote removido com sucesso!", "success");
       await fetchAll();
     } catch (e) {
-      alert(e?.message || "Erro ao excluir o lote.");
+      Swal.fire("Erro", e?.message || "Erro ao excluir lote.", "error");
     }
   }
 

@@ -29,6 +29,17 @@ export default function Shell({ children }) {
   }, [isTxSectionActive]);
 
   const handleLogout = async () => {
+    const confirm = await Swal.fire({
+      title: "Deseja sair?",
+      text: "Você será desconectado da sua conta.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Sim, sair",
+      cancelButtonText: "Cancelar",
+    });
+
+    if (!confirm.isConfirmed) return;
+
     try {
       const res = await fetch("/logout", {
         method: "POST",
@@ -50,19 +61,11 @@ export default function Shell({ children }) {
           window.location.href = "/login";
         });
       } else {
-        Swal.fire({
-          icon: "error",
-          title: "Erro",
-          text: "Não foi possível sair da conta.",
-        });
+        Swal.fire("Erro", "Não foi possível sair da conta.", "error");
       }
     } catch (err) {
       console.error(err);
-      Swal.fire({
-        icon: "error",
-        title: "Erro",
-        text: "Falha na comunicação com o servidor.",
-      });
+      Swal.fire("Erro", "Falha na comunicação com o servidor.", "error");
     }
   };
 
@@ -79,7 +82,10 @@ export default function Shell({ children }) {
         </Link>
 
         <nav className="space-y-2 flex-1">
-          <NavLink to="/dashboard" className={({ isActive }) => itemClass(isActive)}>
+          <NavLink
+            to="/dashboard"
+            className={({ isActive }) => itemClass(isActive)}
+          >
             <span>📊</span> <span>Dashboard</span>
           </NavLink>
 
@@ -94,8 +100,11 @@ export default function Shell({ children }) {
               <span>💰</span>
               <span className="flex-1 text-left">Transações</span>
               <svg
-                className={`w-4 h-4 transition-transform ${openTx ? "rotate-180" : ""}`}
-                viewBox="0 0 20 20" fill="currentColor"
+                className={`w-4 h-4 transition-transform ${
+                  openTx ? "rotate-180" : ""
+                }`}
+                viewBox="0 0 20 20"
+                fill="currentColor"
               >
                 <path d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 011.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" />
               </svg>
@@ -105,7 +114,6 @@ export default function Shell({ children }) {
               <div className="ml-3 pl-2 border-l border-slate-200 space-y-1">
                 <NavLink
                   to="/transactions"
-                  end
                   className={({ isActive }) => subItemClass(isActive)}
                 >
                   Visão geral
@@ -126,15 +134,21 @@ export default function Shell({ children }) {
             )}
           </div>
 
-          <NavLink to="/settings" className={({ isActive }) => itemClass(isActive)}>
+          <NavLink
+            to="/settings"
+            className={({ isActive }) => itemClass(isActive)}
+          >
             <span>⚙️</span> <span>Preferências</span>
           </NavLink>
-          <NavLink to="/profile/edit" className={({ isActive }) => itemClass(isActive)}>
+          <NavLink
+            to="/profile/edit"
+            className={({ isActive }) => itemClass(isActive)}
+          >
             <span>👤</span> <span>Conta</span>
           </NavLink>
         </nav>
 
-        {/* Botão Logout */}
+        {/* Botão de Logout */}
         <button
           onClick={handleLogout}
           className="mt-6 w-full bg-red-600 text-white py-2 px-3 rounded-lg hover:bg-red-700"
