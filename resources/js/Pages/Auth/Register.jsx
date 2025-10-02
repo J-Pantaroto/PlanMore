@@ -89,7 +89,7 @@ export default function Register() {
       {/* Coluna da imagem */}
       <div className="w-1/2 hidden md:flex items-center justify-center bg-gray-100">
         <img
-          src="/images/register-bg.jpg"
+          src="img/register-bg.jpg"
           alt="Join us"
           className="max-w-md rounded-lg"
         />
