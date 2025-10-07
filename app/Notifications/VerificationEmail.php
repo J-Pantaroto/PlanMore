@@ -2,10 +2,10 @@
 
 namespace App\Notifications;
 
-use Illuminate\Notifications\Notification;
+use Illuminate\Auth\Notifications\VerifyEmail as BaseVerifyEmail;
 use Illuminate\Notifications\Messages\MailMessage;
 
-class VerificationEmail extends Notification
+class VerificationEmail extends BaseVerifyEmail
 {
     /**
      * Get the mail representation of the notification.
@@ -15,10 +15,12 @@ class VerificationEmail extends Notification
      */
     public function toMail($notifiable)
     {
+        $verificationUrl = $this->verificationUrl($notifiable);
+
         return (new MailMessage)
                     ->subject('Verificação de E-mail')
                     ->line('Por favor, clique no link abaixo para verificar seu e-mail.')
-                    ->action('Verificar E-mail', $this->verificationUrl($notifiable));
+                    ->action('Verificar E-mail', $verificationUrl);
     }
 
     /**

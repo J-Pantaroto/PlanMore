@@ -56,10 +56,13 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $this->hasMany(Group::class);
     }
+
     public function sendEmailVerificationNotification()
     {
         $this->notify(new VerificationEmail);
     }
+
+
     protected static function booted()
     {
         static::created(function ($user) {

@@ -49,7 +49,6 @@ class TransactionController extends Controller
             'type' => 'required|in:entrada,saida',
             'amount' => 'required|numeric|min:0.01',
             'category_id' => 'required', 'exists:categorias,id',
-            'group_id' => 'required|exists:groups,id',
             'description' => 'nullable|string|max:1000',
             'is_fixed' => 'boolean',
             'is_installment' => 'boolean',

@@ -13,7 +13,7 @@ import ForgotPassword from "./Pages/Auth/ForgotPassword";
 import TransactionsIndex from "./Pages/Transactions/Index";
 import TransactionsGroups from "./Pages/Transactions/Groups";
 import TransactionsAutomation from "./Pages/Transactions/Automation";
-
+import VerifiedSuccess from "./Pages/Auth/EmailVerifiedSucces";
 import '../css/app.css';
 import './bootstrap';
 
@@ -36,6 +36,7 @@ function App() {
                     <Route path="/transactions" element={<TransactionsIndex />} />
                     <Route path="/transactions/groups" element={<TransactionsGroups />} />
                     <Route path="/transactions/automation" element={<TransactionsAutomation />} />
+                    <Route path="/email/verified-success" element={<VerifiedSuccess />} />
                 </Routes>
             </Router>
     );

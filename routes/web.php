@@ -1,5 +1,6 @@
 <?php
-
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Auth;
@@ -39,12 +40,20 @@ Route::get('/auth/google', function () {
     return Socialite::driver('google')->redirect();
 });
 Route::get('/auth/google/callback', function () {
-    $googleUser = Socialite::driver('google')->user();
+    $provider = 'google';
+    $oauthUser = Socialite::driver($provider)->user();
 
     $user = User::updateOrCreate(
-        ['email' => $googleUser->getEmail()],
-        ['name' => $googleUser->getName()]
+        ['email' => $oauthUser->getEmail()],
+        [
+            'name' => $oauthUser->getName(),
+            'provider_name' => $provider,
+            'provider_id' => $oauthUser->getId(),
+            'avatar' => $oauthUser->getAvatar(),
+            'password' => Hash::make(Str::random(16)),
+        ]
     );
+
 
     Auth::login($user);
 
@@ -55,27 +64,30 @@ Route::get('/auth/google/callback', function () {
 Route::get('/auth/github', function () {
     return Socialite::driver('github')->redirect();
 });
+
 Route::get('/auth/github/callback', function () {
-    $githubUser = Socialite::driver('github')->user();
-
-    logger()->info('GitHub User', [
-        'id' => $githubUser->getId(),
-        'nickname' => $githubUser->getNickname(),
-        'name' => $githubUser->getName(),
-        'email' => $githubUser->getEmail(),
-    ]);
-
+    $provider = 'github';
+    $oauthUser = Socialite::driver($provider)->user();
+    $name = $oauthUser->getName() 
+            ?? $oauthUser->getNickname() 
+            ?? Str::before($oauthUser->getEmail(), '@');
     $user = User::updateOrCreate(
-        ['email' => $githubUser->getEmail()],
+        ['email' => $oauthUser->getEmail()],
         [
-            'name' => $githubUser->getName() ?? $githubUser->getNickname(),
+            'name' => $name,
+            'provider_name' => $provider,
+            'provider_id' => $oauthUser->getId(),
+            'avatar' => $oauthUser->getAvatar(),
+            'password' => Hash::make(Str::random(16)),
         ]
     );
+
 
     Auth::login($user);
 
     return redirect('/dashboard');
 });
+
 
 
 Route::get('/{any}', function () {
