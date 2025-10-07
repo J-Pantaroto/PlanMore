@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import Shell from "../../Layouts/Shell";
 import { ensureCsrf } from "@/bootstrap";
 export default function EditProfile() {
-  const [profile, setProfile] = useState({ name: "", email: "" });
+  const [profile, setProfile] = useState({ name: "", email: "", provider_name: null });
   const [errors, setErrors] = useState({});
   const [processing, setProcessing] = useState(false);
 
@@ -22,6 +22,7 @@ export default function EditProfile() {
         setProfile({
           name: data.name || "",
           email: data.email || "",
+          provider_name: data.provider_name || null,
         })
       )
       .catch((err) => console.error("Erro ao carregar perfil:", err));
@@ -162,82 +163,90 @@ export default function EditProfile() {
       </form>
 
       {/* Formulário de alteração de senha */}
-      <h2 className="text-xl font-semibold mt-12 mb-6">Alterar Senha</h2>
-      <form onSubmit={handleSubmitPassword} className="space-y-6 max-w-xl">
-        <div>
-          <label
-            htmlFor="current_password"
-            className="block text-sm font-medium text-gray-700"
+      {!profile.provider_name ? (
+        <>
+        <h2 className="text-xl font-semibold mt-12 mb-6">Alterar Senha</h2>
+        <form onSubmit={handleSubmitPassword} className="space-y-6 max-w-xl">
+          <div>
+            <label
+              htmlFor="current_password"
+              className="block text-sm font-medium text-gray-700"
+            >
+              Senha atual
+            </label>
+            <input
+              type="password"
+              id="current_password"
+              name="current_password"
+              value={passwordData.current_password}
+              onChange={(e) =>
+                setPasswordData({ ...passwordData, current_password: e.target.value })
+              }
+              className="mt-1 block w-full p-2 border border-gray-300 rounded-md"
+            />
+            {errors.current_password && (
+              <div className="text-red-500 text-sm">{errors.current_password}</div>
+            )}
+          </div>
+
+          <div>
+            <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+              Nova senha
+            </label>
+            <input
+              type="password"
+              id="password"
+              name="password"
+              value={passwordData.password}
+              onChange={(e) =>
+                setPasswordData({ ...passwordData, password: e.target.value })
+              }
+              className="mt-1 block w-full p-2 border border-gray-300 rounded-md"
+            />
+            {errors.password && <div className="text-red-500 text-sm">{errors.password}</div>}
+          </div>
+
+          <div>
+            <label
+              htmlFor="password_confirmation"
+              className="block text-sm font-medium text-gray-700"
+            >
+              Confirmar nova senha
+            </label>
+            <input
+              type="password"
+              id="password_confirmation"
+              name="password_confirmation"
+              value={passwordData.password_confirmation}
+              onChange={(e) =>
+                setPasswordData({
+                  ...passwordData,
+                  password_confirmation: e.target.value,
+                })
+              }
+              className="mt-1 block w-full p-2 border border-gray-300 rounded-md"
+            />
+            {errors.password_confirmation && (
+              <div className="text-red-500 text-sm">
+                {errors.password_confirmation}
+              </div>
+            )}
+          </div>
+
+          <button
+            type="submit"
+            className="w-full py-2 px-4 bg-violet-700 text-white rounded-md hover:bg-violet-800"
+            disabled={processing}
           >
-            Senha atual
-          </label>
-          <input
-            type="password"
-            id="current_password"
-            name="current_password"
-            value={passwordData.current_password}
-            onChange={(e) =>
-              setPasswordData({ ...passwordData, current_password: e.target.value })
-            }
-            className="mt-1 block w-full p-2 border border-gray-300 rounded-md"
-          />
-          {errors.current_password && (
-            <div className="text-red-500 text-sm">{errors.current_password}</div>
-          )}
-        </div>
-
-        <div>
-          <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-            Nova senha
-          </label>
-          <input
-            type="password"
-            id="password"
-            name="password"
-            value={passwordData.password}
-            onChange={(e) =>
-              setPasswordData({ ...passwordData, password: e.target.value })
-            }
-            className="mt-1 block w-full p-2 border border-gray-300 rounded-md"
-          />
-          {errors.password && <div className="text-red-500 text-sm">{errors.password}</div>}
-        </div>
-
-        <div>
-          <label
-            htmlFor="password_confirmation"
-            className="block text-sm font-medium text-gray-700"
-          >
-            Confirmar nova senha
-          </label>
-          <input
-            type="password"
-            id="password_confirmation"
-            name="password_confirmation"
-            value={passwordData.password_confirmation}
-            onChange={(e) =>
-              setPasswordData({
-                ...passwordData,
-                password_confirmation: e.target.value,
-              })
-            }
-            className="mt-1 block w-full p-2 border border-gray-300 rounded-md"
-          />
-          {errors.password_confirmation && (
-            <div className="text-red-500 text-sm">
-              {errors.password_confirmation}
-            </div>
-          )}
-        </div>
-
-        <button
-          type="submit"
-          className="w-full py-2 px-4 bg-violet-700 text-white rounded-md hover:bg-violet-800"
-          disabled={processing}
-        >
-          {processing ? "Salvando..." : "Alterar Senha"}
-        </button>
-      </form>
+            {processing ? "Salvando..." : "Alterar Senha"}
+          </button>
+        </form>
+        </>
+        ) : (
+           <p className="mt-6 text-gray-600">
+              Você está logado via {profile.provider_name}. Alterar senha não está disponível.
+          </p> 
+        )}
     </Shell>
   );
 }

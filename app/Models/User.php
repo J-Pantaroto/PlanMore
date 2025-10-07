@@ -62,7 +62,11 @@ class User extends Authenticatable implements MustVerifyEmail
         $this->notify(new VerificationEmail);
     }
 
-
+    public function isOauth()
+    {
+        return !is_null($this->provider_name) && !is_null($this->provider_id);
+    }
+    
     protected static function booted()
     {
         static::created(function ($user) {

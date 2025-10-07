@@ -28,6 +28,7 @@ class ProfileController extends Controller
         return response()->json([
             'name' => $user->name,
             'email' => $user->email,
+            'provider_name' => $user->provider_name,
         ]);
     }
 
