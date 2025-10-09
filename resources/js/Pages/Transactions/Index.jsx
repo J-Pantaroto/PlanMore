@@ -188,7 +188,23 @@ export default function TransactionsIndex() {
       Swal.fire("Erro", e?.message || "Erro ao atualizar.", "error");
     }
   }
-
+  function startEdit(row) {
+    setEditingId(row.id);
+    setEditForm({
+      date: row.date,
+      description: row.description,
+      category_id: row.category_id,
+      group_id: row.group_id,
+      amount: row.amount,
+      is_installment: row.is_installment,
+      installments: row.installments,
+      installment_number: row.installment_number,
+      is_recurring: row.is_recurring,
+      recurrence_interval: row.recurrence_interval,
+      recurrence_end_date: row.recurrence_end_date,
+    });
+  }
+  
   async function remove(id) {
     const confirm = await Swal.fire({
       title: "Excluir transação?",
