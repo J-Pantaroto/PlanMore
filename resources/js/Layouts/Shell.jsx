@@ -126,6 +126,12 @@ export default function Shell({ children }) {
                   Grupos
                 </NavLink>
                 <NavLink
+                  to="/transactions/categories"
+                  className={({ isActive }) => subItemClass(isActive)}
+                >
+                  Categorias
+                </NavLink>
+                <NavLink
                   to="/transactions/automation"
                   className={({ isActive }) => subItemClass(isActive)}
                 >

@@ -26,7 +26,29 @@ class CategoryController extends Controller
             'type' => $request->type,
         ]);
 
-        return response()->json(['message' => 'Categoria criada com sucesso!', 'category' => $category]);
+        return response()->json([
+            'message' => 'Categoria criada com sucesso!',
+            'category' => $category
+        ]);
+    }
+
+    public function update(Request $request, $id)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'type' => 'required|in:entrada,saida',
+        ]);
+
+        $category = Category::where('user_id', Auth::id())->findOrFail($id);
+        $category->update([
+            'name' => $request->name,
+            'type' => $request->type,
+        ]);
+
+        return response()->json([
+            'message' => 'Categoria atualizada com sucesso!',
+            'category' => $category
+        ]);
     }
 
     public function destroy($id)

@@ -34,6 +34,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/categories', [CategoryController::class, 'store']);
     Route::put('/categories/{id}', [CategoryController::class, 'update']);
     Route::delete('/categories/{id}', [CategoryController::class, 'destroy']);
+    Route::post('/categories/recognize', [CategoryRecognitionController::class, 'recognize']);
 
     // Groups CRUD
     Route::get('/groups', [GroupController::class, 'index']);
