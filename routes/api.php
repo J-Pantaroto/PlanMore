@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\GoalController;
 use App\Http\Controllers\CategoryRecognitionController;
 use App\Http\Controllers\ExportController;
+use App\Http\Controllers\UserPreferenceController;
 
 use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\CategoryController;
@@ -47,4 +48,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/recognize-category', [CategoryRecognitionController::class, 'recognize']);
     Route::get('/export/excel', [ExportController::class, 'exportExcel']);
     Route::get('/export/pdf', [ExportController::class, 'exportPDF']);
+    Route::get('/user/preferences', [UserPreferenceController::class, 'index']);
+    Route::put('/user/preferences', [UserPreferenceController::class, 'update']);
 });

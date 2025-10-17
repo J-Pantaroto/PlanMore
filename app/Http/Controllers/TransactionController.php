@@ -50,7 +50,7 @@ class TransactionController extends Controller
             'amount' => 'required|numeric|min:0.01',
             'category_id' => 'required', 'exists:categorias,id',
             'description' => 'nullable|string|max:1000',
-            'grup_id' => 'nullable', 'exists:grupos, id',
+            'group_id' => 'nullable', 'exists:grupos, id',
             'is_fixed' => 'boolean',
             'is_installment' => 'boolean',
             'installments' => 'nullable|integer|min:1|max:120',

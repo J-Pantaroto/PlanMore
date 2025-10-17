@@ -7,32 +7,55 @@ const money = (n) =>
   (Number(n) || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 const fmtDate = (s) => {
   if (!s) return "-";
-  const [y, m, d] = String(s).split("-");
-  if (!y || !m || !d) return s;
-  return `${d}/${m}/${y}`;
+  const date = new Date(s);
+  if (isNaN(date)) return s;
+  const dd = String(date.getDate()).padStart(2, "0");
+  const mm = String(date.getMonth() + 1).padStart(2, "0");
+  const yyyy = date.getFullYear();
+  return `${dd}/${mm}/${yyyy}`;
 };
 
 function Modal({ open, onClose, title, children }) {
   if (!open) return null;
+
   return (
     <div
-      className="fixed inset-0 z-50"
+      className="fixed inset-0 z-50 flex items-center justify-center px-2 sm:px-4"
       role="dialog"
       aria-modal="true"
       onKeyDown={(e) => e.key === "Escape" && onClose()}
     >
-      <div className="absolute inset-0 bg-black/30" onClick={onClose} />
-      <div className="absolute inset-0 flex items-center justify-center p-4">
-        <div className="w-full max-w-lg bg-white rounded-2xl shadow-xl ring-1 ring-slate-200">
-          <div className="px-5 pt-5 pb-2 border-b">
-            <h3 className="text-lg font-semibold">{title}</h3>
-          </div>
-          <div className="p-5">{children}</div>
+      <div
+        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+        onClick={onClose}
+      />
+
+      <div
+        className="
+          relative z-10 w-full max-w-lg max-h-[90vh] overflow-y-auto
+          bg-white rounded-2xl shadow-xl ring-1 ring-slate-200
+          flex flex-col
+          animate-[fadeIn_0.2s_ease-in-out]
+        "
+      >
+        <div className="flex items-center justify-between px-5 py-3 border-b">
+          <h3 className="text-lg font-semibold text-slate-800">{title}</h3>
+          <button
+            onClick={onClose}
+            className="text-slate-500 hover:text-slate-800 transition"
+            aria-label="Fechar"
+          >
+            ✕
+          </button>
         </div>
+
+        <div className="p-5 space-y-3">{children}</div>
       </div>
     </div>
   );
 }
+
+
 
 export default function TransactionsIndex() {
   const today = new Date();
@@ -188,6 +211,12 @@ export default function TransactionsIndex() {
       Swal.fire("Erro", e?.message || "Erro ao atualizar.", "error");
     }
   }
+
+  async function cancelEdit() {
+    setEditingId(null);
+    setEditForm({});
+  }
+
   function startEdit(row) {
     setEditingId(row.id);
     setEditForm({
@@ -204,7 +233,7 @@ export default function TransactionsIndex() {
       recurrence_end_date: row.recurrence_end_date,
     });
   }
-  
+
   async function remove(id) {
     const confirm = await Swal.fire({
       title: "Excluir transação?",
@@ -570,16 +599,18 @@ export default function TransactionsIndex() {
           </div>
 
           <div>
-            <label className="block mb-1 font-medium">Data e hora</label>
+            <label className="block mb-1 font-medium">Data</label>
             <input
               className="w-full border border-slate-300 rounded-lg p-2"
-              type="datetime-local"
-              value={modalForm.datetime}
-              onChange={(e) => setModalForm({ ...modalForm, datetime: e.target.value })}
+              type="date"
+              value={String(modalForm.datetime).slice(0, 10)}
+              onChange={(e) =>
+                setModalForm({
+                  ...modalForm,
+                  datetime: e.target.value + "T00:00",
+                })
+              }
             />
-            <p className="text-xs text-slate-500 mt-1">
-              Obs.: a API usa somente a data; a hora é para referência visual.
-            </p>
           </div>
 
           <div>

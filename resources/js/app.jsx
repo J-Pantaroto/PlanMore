@@ -5,6 +5,7 @@ import { useEffect } from 'react';
 import { ensureCsrf } from './bootstrap';
 import Welcome from "./Pages/Welcome";
 import Dashboard from "./Pages/Dashboard";
+import Settings from "./Pages/Preferences";
 import Register from "./Pages/Auth/Register";
 import Login from "./Pages/Auth/Login";
 import VerifyEmail from "./Pages/Auth/VerifyEmail";
@@ -31,6 +32,7 @@ function App() {
                     <Route path="/dashboard" element={<Dashboard />} />
                     <Route exact path="/profile/edit" element={<EditProfile />} />
                     <Route path="/register" element={<Register />} />
+                    <Route path="/settings" element={<Settings />} />
                     <Route path="/login" element={<Login />} />
                     <Route path="/verify-email" element={<VerifyEmail />} />
                     <Route path="/forgot-password" element={<ForgotPassword />} />
@@ -39,6 +41,7 @@ function App() {
                     <Route path="/transactions/categories" element={<TransactionsCategories />} />
                     <Route path="/transactions/automation" element={<TransactionsAutomation />} />
                     <Route path="/email/verified-success" element={<VerifiedSuccess />} />
+                    
                 </Routes>
             </Router>
     );

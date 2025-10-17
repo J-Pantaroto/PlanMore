@@ -115,6 +115,7 @@ export default function Shell({ children }) {
               <div className="ml-3 pl-2 border-l border-slate-200 space-y-1">
                 <NavLink
                   to="/transactions"
+                  end
                   className={({ isActive }) => subItemClass(isActive)}
                 >
                   Visão geral
