@@ -1,0 +1,124 @@
+{
+  "app": {
+    "name": "PlanMore"
+  },
+  "menu": {
+    "dashboard": "Dashboard",
+    "transactions": "Transactions",
+    "groups": "Groups",
+    "categories": "Categories",
+    "automation": "Automation",
+    "preferences": "Preferences",
+    "account": "Account",
+    "logout": "Logout"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "balance": "Balance",
+    "income": "Total Income",
+    "expense": "Total Expense",
+    "categories": "Categories",
+    "summary": "Income and Expense Summary",
+    "export_pdf": "Export PDF",
+    "export_excel": "Export Excel"
+  },
+  "transactions": {
+    "manage": "Manage Transactions",
+    "new": "Add New Transaction",
+    "recent": "Recent Transactions",
+    "type": "Type",
+    "income": "Income",
+    "expense": "Expense",
+    "category": "Category",
+    "group": "Group",
+    "date": "Date",
+    "description": "Description",
+    "value": "Value",
+    "parcel": "Installment",
+    "recurring": "Recurring",
+    "actions": "Actions",
+    "no_records": "No records",
+    "loading": "Loading...",
+    "installment": "Installment",
+    "installments_number": "Number of installments",
+    "interval": "Interval",
+    "end": "Until",
+    "note": "Note",
+    "confirm": "Confirm",
+    "cancel": "Cancel",
+    "search_description": "Search description...",
+    "filters": {
+      "type_all": "Type (all)",
+      "month": "Month"
+    }
+  },
+  "automation": {
+    "title": "Automation",
+    "new_rule": "New Rule",
+    "rule_name": "Rule Name",
+    "condition": "If description contains",
+    "mark_recurring": "Mark as recurring",
+    "set_category": "Set category (optional id)",
+    "set_group": "Set group (optional id)",
+    "add_rule": "Add Rule",
+    "active_rules": "Active Rules",
+    "no_rules": "No rules"
+  },
+  "groups": {
+    "title": "Groups",
+    "new": "New group",
+    "add": "Add",
+    "list": "Group list",
+    "no_groups": "No groups"
+  },
+  "categories": {
+    "title": "Categories",
+    "new": "New category",
+    "add": "Add",
+    "list": "Category list",
+    "no_categories": "No categories",
+    "type": "Type"
+  },
+  "preferences": {
+    "title": "Preferences",
+    "theme": "Theme",
+    "light": "Light",
+    "dark": "Dark",
+    "language": "Language",
+    "notifications": "Notifications",
+    "email_notifications": "Email notifications",
+    "update_notifications": "Update alerts",
+    "transaction_alerts": "Transaction alerts",
+    "save": "Save",
+    "reset": "Restore default"
+  },
+  "account": {
+    "profile": "Edit Profile",
+    "name": "Name",
+    "email": "Email",
+    "password": "Password",
+    "confirm_password": "Confirm password"
+  },
+  "alerts": {
+    "success": "Success",
+    "error": "Error",
+    "warning": "Warning",
+    "saved": "Saved successfully!",
+    "updated": "Updated successfully!",
+    "deleted": "Deleted successfully!",
+    "confirm_delete": "Are you sure you want to delete?",
+    "confirm_logout": "Do you want to log out?",
+    "logout_text": "You will be disconnected from your account."
+  },
+  "buttons": {
+    "edit": "Edit",
+    "delete": "Delete",
+    "save": "Save",
+    "cancel": "Cancel",
+    "add": "Add",
+    "confirm": "Confirm",
+    "back": "Back",
+    "previous": "Previous",
+    "next": "Next"
+  }
+}

@@ -19,7 +19,9 @@ export default function Groups() {
     }
   }
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+  }, []);
 
   async function create() {
     if (!name.trim()) return;
@@ -44,53 +46,70 @@ export default function Groups() {
 
   return (
     <Shell>
-      <h1 className="text-2xl font-bold mb-4">Grupos</h1>
+      <h1 className="text-2xl font-bold mb-4 text-slate-900 dark:text-white transition-colors duration-300">
+        Grupos
+      </h1>
 
-      <div className="bg-white rounded-xl shadow ring-1 ring-slate-200 p-4 mb-6">
-        <h2 className="font-semibold mb-3">Novo grupo</h2>
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow ring-1 ring-slate-200 dark:ring-gray-700 p-4 mb-6 transition-colors duration-300">
+        <h2 className="font-semibold mb-3 text-slate-900 dark:text-white">
+          Novo grupo
+        </h2>
         <div className="flex items-center gap-2">
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="Nome do grupo (ex.: Moradia, Estudos...)"
-            className="border border-slate-300 rounded-lg p-2 flex-1"
+            className="border border-slate-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-slate-900 dark:text-gray-100 rounded-lg p-2 flex-1 transition-colors duration-300"
           />
           <button
             onClick={create}
-            className="px-4 py-2 rounded-lg bg-violet-700 text-white hover:bg-violet-800"
+            className="px-4 py-2 rounded-lg bg-violet-700 text-white hover:bg-violet-800 transition"
           >
             Adicionar
           </button>
         </div>
       </div>
 
-      <div className="bg-white rounded-xl shadow ring-1 ring-slate-200">
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow ring-1 ring-slate-200 dark:ring-gray-700 transition-colors duration-300">
         <div className="p-4 pb-0">
-          <h3 className="font-semibold mb-3">Lista de grupos</h3>
+          <h3 className="font-semibold mb-3 text-slate-900 dark:text-white">
+            Lista de grupos
+          </h3>
         </div>
 
         <div className="overflow-x-auto">
-          <table className="min-w-full text-sm">
+          <table className="min-w-full text-sm bg-white dark:bg-gray-800 text-slate-900 dark:text-gray-100 transition-colors duration-300">
             <thead>
-              <tr className="bg-slate-50">
+              <tr className="bg-slate-50 dark:bg-gray-700 text-slate-700 dark:text-gray-200">
                 <th className="text-left p-3 font-semibold">Nome</th>
                 <th className="text-right p-3 font-semibold">Ações</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan="2" className="p-6 text-center">Carregando...</td></tr>
+                <tr>
+                  <td colSpan="2" className="p-6 text-center">
+                    Carregando...
+                  </td>
+                </tr>
               ) : list.length === 0 ? (
-                <tr><td colSpan="2" className="p-6 text-center">Nenhum grupo</td></tr>
+                <tr>
+                  <td colSpan="2" className="p-6 text-center">
+                    Nenhum grupo
+                  </td>
+                </tr>
               ) : (
                 list.map((g) => (
-                  <tr key={g.id} className="border-t">
+                  <tr
+                    key={g.id}
+                    className="border-t border-slate-100 dark:border-gray-700 transition-colors duration-300"
+                  >
                     <td className="p-3">
                       {editingId === g.id ? (
                         <input
                           value={editName}
                           onChange={(e) => setEditName(e.target.value)}
-                          className="border border-slate-300 rounded p-1 w-full"
+                          className="border border-slate-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-slate-900 dark:text-gray-100 rounded p-1 w-full transition-colors duration-300"
                         />
                       ) : (
                         g.name
@@ -99,13 +118,39 @@ export default function Groups() {
                     <td className="p-3 text-right">
                       {editingId === g.id ? (
                         <div className="flex items-center gap-2 justify-end">
-                          <button onClick={() => saveEdit(g.id)} className="text-green-700 hover:underline">Salvar</button>
-                          <button onClick={() => { setEditingId(null); setEditName(""); }} className="text-slate-700 hover:underline">Cancelar</button>
+                          <button
+                            onClick={() => saveEdit(g.id)}
+                            className="text-green-600 hover:underline"
+                          >
+                            Salvar
+                          </button>
+                          <button
+                            onClick={() => {
+                              setEditingId(null);
+                              setEditName("");
+                            }}
+                            className="text-slate-600 dark:text-gray-300 hover:underline"
+                          >
+                            Cancelar
+                          </button>
                         </div>
                       ) : (
                         <div className="flex items-center gap-2 justify-end">
-                          <button onClick={() => { setEditingId(g.id); setEditName(g.name); }} className="text-violet-700 hover:underline">Editar</button>
-                          <button onClick={() => remove(g.id)} className="text-red-700 hover:underline">Excluir</button>
+                          <button
+                            onClick={() => {
+                              setEditingId(g.id);
+                              setEditName(g.name);
+                            }}
+                            className="text-violet-600 hover:underline"
+                          >
+                            Editar
+                          </button>
+                          <button
+                            onClick={() => remove(g.id)}
+                            className="text-red-600 hover:underline"
+                          >
+                            Excluir
+                          </button>
                         </div>
                       )}
                     </td>

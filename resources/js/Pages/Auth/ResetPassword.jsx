@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
-import route from "ziggy-js";
+import { useParams, useSearchParams } from "react-router-dom";
+import { route } from "ziggy-js";
+import Swal from "sweetalert2";
 
 import InputError from "@/Components/InputError";
 import InputLabel from "@/Components/InputLabel";
@@ -8,7 +10,10 @@ import TextInput from "@/Components/TextInput";
 import GuestLayout from "@/Layouts/GuestLayout";
 
 export default function ResetPassword() {
-  // tenta pegar token e email da URL (?token=...&email=...)
+  const { token } = useParams();
+  const [searchParams] = useSearchParams();
+  const emailFromUrl = searchParams.get("email") || "";
+
   const [data, setData] = useState({
     token: "",
     email: "",
@@ -18,12 +23,15 @@ export default function ResetPassword() {
   const [errors, setErrors] = useState({});
   const [processing, setProcessing] = useState(false);
 
+  function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(";").shift();
+  }
+
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const token = params.get("token") || "";
-    const email = params.get("email") || "";
-    setData((d) => ({ ...d, token, email }));
-  }, []);
+    setData((d) => ({ ...d, token, email: emailFromUrl }));
+  }, [token, emailFromUrl]);
 
   const submit = async (e) => {
     e.preventDefault();
@@ -31,35 +39,67 @@ export default function ResetPassword() {
     setErrors({});
 
     try {
-      // Se estiver usando Sanctum
-      await fetch(route("sanctum.csrf-cookie"), { credentials: "include" });
+      await fetch("http://localhost:8000/sanctum/csrf-cookie", {
+        credentials: "include",
+      });
 
-      const res = await fetch(route("password.store"), {
+      const csrfToken = decodeURIComponent(getCookie("XSRF-TOKEN"));
+
+      const res = await fetch("http://localhost:8000/reset-password", {
         method: "POST",
         credentials: "include",
         headers: {
           "Content-Type": "application/json",
           "X-Requested-With": "XMLHttpRequest",
+          "X-XSRF-TOKEN": csrfToken,
         },
-        body: JSON.stringify({
-          token: data.token,
-          email: data.email,
-          password: data.password,
-          password_confirmation: data.password_confirmation,
-        }),
+        body: JSON.stringify(data),
       });
 
       if (res.status === 422) {
         const json = await res.json();
         setErrors(json.errors || {});
+        Swal.fire({
+          icon: "error",
+          title: "Erro!",
+          text: json.errors.email?.[0] || "Verifique os campos informados.",
+          confirmButtonColor: "#9333ea",
+          background: "#1e1b4b",
+          color: "#fff",
+        });
       } else if (res.ok) {
-        // redefiniu com sucesso: envie para login ou dashboard
-        window.location.href = route("login");
+        Swal.fire({
+          icon: "success",
+          title: "Senha redefinida!",
+          text: "Sua senha foi alterada com sucesso.",
+          confirmButtonColor: "#9333ea",
+          background: "#1e1b4b",
+          color: "#fff",
+        }).then(() => {
+          window.location.href = route("login");
+        });
       } else {
-        console.error("Falha ao redefinir senha:", await res.text());
+        const errorText = await res.text();
+        console.error("Falha ao redefinir senha:", errorText);
+        Swal.fire({
+          icon: "error",
+          title: "Falha no servidor",
+          text: "Não foi possível redefinir a senha.",
+          confirmButtonColor: "#9333ea",
+          background: "#1e1b4b",
+          color: "#fff",
+        });
       }
     } catch (err) {
       console.error(err);
+      Swal.fire({
+        icon: "error",
+        title: "Erro inesperado",
+        text: "Tente novamente mais tarde.",
+        confirmButtonColor: "#9333ea",
+        background: "#1e1b4b",
+        color: "#fff",
+      });
     } finally {
       setProcessing(false);
     }
@@ -67,13 +107,16 @@ export default function ResetPassword() {
 
   return (
     <GuestLayout>
+      <div className="mb-4 text-sm text-gray-600">
+        Informe sua nova senha abaixo para redefinir o acesso à sua conta.
+      </div>
+
       <form onSubmit={submit}>
         <div>
           <InputLabel htmlFor="email" value="E-mail" />
           <TextInput
             id="email"
             type="email"
-            name="email"
             value={data.email}
             className="mt-1 block w-full"
             autoComplete="username"
@@ -88,7 +131,6 @@ export default function ResetPassword() {
           <TextInput
             id="password"
             type="password"
-            name="password"
             value={data.password}
             className="mt-1 block w-full"
             autoComplete="new-password"
@@ -99,11 +141,10 @@ export default function ResetPassword() {
         </div>
 
         <div className="mt-4">
-          <InputLabel htmlFor="password_confirmation" value="Confirmar nova senha" />
+          <InputLabel htmlFor="password_confirmation" value="Confirmar senha" />
           <TextInput
-            type="password"
             id="password_confirmation"
-            name="password_confirmation"
+            type="password"
             value={data.password_confirmation}
             className="mt-1 block w-full"
             autoComplete="new-password"
@@ -112,14 +153,17 @@ export default function ResetPassword() {
             }
             required
           />
-          <InputError message={errors.password_confirmation?.[0]} className="mt-2" />
+          <InputError
+            message={errors.password_confirmation?.[0]}
+            className="mt-2"
+          />
         </div>
 
-        {/* mantém o token oculto para inspecionar/debugar */}
-        {/* <input type="hidden" name="token" value={data.token} /> */}
-
         <div className="mt-4 flex items-center justify-end">
-          <PrimaryButton className="ms-4" disabled={processing}>
+          <PrimaryButton
+            className="bg-purple-600 hover:bg-purple-700 text-white font-semibold ms-4"
+            disabled={processing}
+          >
             {processing ? "Redefinindo..." : "Redefinir senha"}
           </PrimaryButton>
         </div>

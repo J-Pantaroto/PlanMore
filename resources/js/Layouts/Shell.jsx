@@ -5,14 +5,18 @@ import Swal from "sweetalert2";
 function itemClass(isActive) {
   return [
     "flex items-center gap-2 px-3 py-2 rounded-lg transition-colors",
-    isActive ? "bg-violet-700 text-white" : "text-slate-900 hover:bg-slate-100",
+    isActive
+      ? "bg-violet-700 text-white"
+      : "text-slate-900 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-gray-800",
   ].join(" ");
 }
 
 function subItemClass(isActive) {
   return [
-    "block px-3 py-2 rounded-lg text-sm",
-    isActive ? "bg-violet-50 text-violet-800" : "text-slate-700 hover:bg-slate-100",
+    "block px-3 py-2 rounded-lg text-sm transition-colors",
+    isActive
+      ? "bg-violet-50 dark:bg-violet-900/30 text-violet-800 dark:text-violet-200"
+      : "text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-gray-800",
   ].join(" ");
 }
 
@@ -36,6 +40,8 @@ export default function Shell({ children }) {
       showCancelButton: true,
       confirmButtonText: "Sim, sair",
       cancelButtonText: "Cancelar",
+      background: "#1e1b4b",
+      color: "#fff",
     });
 
     if (!confirm.isConfirmed) return;
@@ -47,7 +53,9 @@ export default function Shell({ children }) {
         headers: {
           "X-Requested-With": "XMLHttpRequest",
           "Content-Type": "application/json",
-          "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').getAttribute("content"),
+          "X-CSRF-TOKEN": document
+            .querySelector('meta[name="csrf-token"]')
+            .getAttribute("content"),
         },
       });
 
@@ -58,6 +66,8 @@ export default function Shell({ children }) {
           text: "Você saiu da sua conta.",
           timer: 2000,
           showConfirmButton: false,
+          background: "#1e1b4b",
+          color: "#fff",
         }).then(() => {
           window.location.href = "/login";
         });
@@ -71,12 +81,12 @@ export default function Shell({ children }) {
   };
 
   return (
-    <div className="min-h-screen flex bg-gray-50 text-slate-900">
+    <div className="min-h-screen flex bg-gray-50 dark:bg-gray-900 text-slate-900 dark:text-slate-100 transition-colors duration-500">
       {/* Sidebar */}
-      <aside className="w-56 shrink-0 bg-white border-r border-slate-200 p-5 flex flex-col">
+      <aside className="w-56 shrink-0 bg-white dark:bg-gray-800 border-r border-slate-200 dark:border-gray-700 p-5 flex flex-col transition-colors duration-500">
         <Link
           to="/dashboard"
-          className="flex items-center gap-2 text-lg font-semibold mb-7"
+          className="flex items-center gap-2 text-lg font-semibold mb-7 text-slate-900 dark:text-white"
         >
           <img src="/favicon.ico" alt="" className="w-6 h-6" />
           <span>PlanMore</span>
@@ -90,7 +100,6 @@ export default function Shell({ children }) {
             <span>📊</span> <span>Dashboard</span>
           </NavLink>
 
-          {/* Transações (colapsável) */}
           <div className="space-y-1">
             <button
               type="button"
@@ -112,7 +121,7 @@ export default function Shell({ children }) {
             </button>
 
             {openTx && (
-              <div className="ml-3 pl-2 border-l border-slate-200 space-y-1">
+              <div className="ml-3 pl-2 border-l border-slate-200 dark:border-gray-700 space-y-1 transition-all">
                 <NavLink
                   to="/transactions"
                   end
@@ -156,17 +165,17 @@ export default function Shell({ children }) {
           </NavLink>
         </nav>
 
-        {/* Botão de Logout */}
         <button
           onClick={handleLogout}
-          className="mt-6 w-full bg-red-600 text-white py-2 px-3 rounded-lg hover:bg-red-700"
+          className="mt-6 w-full bg-red-600 hover:bg-red-700 text-white py-2 px-3 rounded-lg transition-all duration-300"
         >
           Sair
         </button>
       </aside>
 
-      {/* Content */}
-      <main className="flex-1 p-6 md:p-10">{children}</main>
+      <main className="flex-1 p-6 md:p-10 bg-gray-50 dark:bg-gray-900 transition-colors duration-500">
+        {children}
+      </main>
     </div>
   );
 }

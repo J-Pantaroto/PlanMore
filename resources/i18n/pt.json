@@ -1,0 +1,124 @@
+{
+  "app": {
+    "name": "PlanMore"
+  },
+  "menu": {
+    "dashboard": "Dashboard",
+    "transactions": "Transações",
+    "groups": "Grupos",
+    "categories": "Categorias",
+    "automation": "Automatização",
+    "preferences": "Preferências",
+    "account": "Conta",
+    "logout": "Sair"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "balance": "Saldo",
+    "income": "Receita Total",
+    "expense": "Despesa Total",
+    "categories": "Categorias",
+    "summary": "Resumo de Receitas e Despesas",
+    "export_pdf": "Exportar PDF",
+    "export_excel": "Exportar Excel"
+  },
+  "transactions": {
+    "manage": "Gerenciar Transações",
+    "new": "Cadastrar nova transação",
+    "recent": "Transações recentes",
+    "type": "Tipo",
+    "income": "Entrada",
+    "expense": "Saída",
+    "category": "Categoria",
+    "group": "Grupo",
+    "date": "Data",
+    "description": "Descrição",
+    "value": "Valor",
+    "parcel": "Parcela",
+    "recurring": "Recorrente",
+    "actions": "Ações",
+    "no_records": "Sem registros",
+    "loading": "Carregando...",
+    "installment": "Parcelado",
+    "installments_number": "Número de parcelas",
+    "interval": "Intervalo",
+    "end": "Até",
+    "note": "Observação",
+    "confirm": "Confirmar",
+    "cancel": "Cancelar",
+    "search_description": "Buscar descrição...",
+    "filters": {
+      "type_all": "Tipo (todos)",
+      "month": "Mês"
+    }
+  },
+  "automation": {
+    "title": "Automatização",
+    "new_rule": "Nova regra",
+    "rule_name": "Nome da regra",
+    "condition": "Se descrição conter",
+    "mark_recurring": "Marcar como recorrente",
+    "set_category": "Definir categoria (id opcional)",
+    "set_group": "Definir grupo (id opcional)",
+    "add_rule": "Adicionar regra",
+    "active_rules": "Regras ativas",
+    "no_rules": "Nenhuma regra"
+  },
+  "groups": {
+    "title": "Grupos",
+    "new": "Novo grupo",
+    "add": "Adicionar",
+    "list": "Lista de grupos",
+    "no_groups": "Nenhum grupo"
+  },
+  "categories": {
+    "title": "Categorias",
+    "new": "Nova categoria",
+    "add": "Adicionar",
+    "list": "Lista de categorias",
+    "no_categories": "Nenhuma categoria",
+    "type": "Tipo"
+  },
+  "preferences": {
+    "title": "Preferências",
+    "theme": "Tema",
+    "light": "Claro",
+    "dark": "Escuro",
+    "language": "Idioma",
+    "notifications": "Notificações",
+    "email_notifications": "Notificações por e-mail",
+    "update_notifications": "Avisos de atualização",
+    "transaction_alerts": "Alertas de transações",
+    "save": "Salvar",
+    "reset": "Restaurar padrão"
+  },
+  "account": {
+    "profile": "Editar Perfil",
+    "name": "Nome",
+    "email": "E-mail",
+    "password": "Senha",
+    "confirm_password": "Confirmar senha"
+  },
+  "alerts": {
+    "success": "Sucesso",
+    "error": "Erro",
+    "warning": "Atenção",
+    "saved": "Salvo com sucesso!",
+    "updated": "Atualizado com sucesso!",
+    "deleted": "Excluído com sucesso!",
+    "confirm_delete": "Tem certeza que deseja excluir?",
+    "confirm_logout": "Deseja sair?",
+    "logout_text": "Você será desconectado da sua conta."
+  },
+  "buttons": {
+    "edit": "Editar",
+    "delete": "Excluir",
+    "save": "Salvar",
+    "cancel": "Cancelar",
+    "add": "Adicionar",
+    "confirm": "Confirmar",
+    "back": "Voltar",
+    "previous": "Anterior",
+    "next": "Próxima"
+  }
+}

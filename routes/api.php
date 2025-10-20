@@ -48,6 +48,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/recognize-category', [CategoryRecognitionController::class, 'recognize']);
     Route::get('/export/excel', [ExportController::class, 'exportExcel']);
     Route::get('/export/pdf', [ExportController::class, 'exportPDF']);
-    Route::get('/user/preferences', [UserPreferenceController::class, 'index']);
+    Route::get('/user/preferences', [UserPreferenceController::class, 'show']);
     Route::put('/user/preferences', [UserPreferenceController::class, 'update']);
 });

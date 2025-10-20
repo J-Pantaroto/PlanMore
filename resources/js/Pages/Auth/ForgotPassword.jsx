@@ -4,6 +4,7 @@ import InputError from "@/Components/InputError";
 import PrimaryButton from "@/Components/PrimaryButton";
 import TextInput from "@/Components/TextInput";
 import GuestLayout from "@/Layouts/GuestLayout";
+import Swal from "sweetalert2";
 
 export default function ForgotPassword() {
   const [data, setData] = useState({ email: "" });
@@ -40,23 +41,49 @@ export default function ForgotPassword() {
         body: JSON.stringify(data),
       });
 
-      if (res.status === 422) {
-        const json = await res.json();
-        setErrors(json.errors || {});
-      } else if (res.ok) {
-        const json = await res.json();
-        window.location.href = json.redirect || route("dashboard");
-      } else {
-        const errorText = await res.text();
-        console.error("Falha ao solicitar redefinição:", errorText);
+  if (res.status === 422) {
+          const json = await res.json();
+          setErrors(json.errors || {});
+          Swal.fire({
+            icon: "error",
+            title: "Erro!",
+            text: json.errors.email ? json.errors.email[0] : "Verifique o e-mail informado.",
+            confirmButtonColor: "#9333ea",
+          });
+        } 
+        else if (res.ok) {
+          const json = await res.json();
+          Swal.fire({
+            icon: "success",
+            title: "Link enviado!",
+            text: "Um link de redefinição de senha foi enviado para o seu e-mail.",
+            confirmButtonColor: "#9333ea",
+          }).then(() => {
+            window.location.href = json.redirect || route("login");
+          });
+        } 
+        else {
+          const errorText = await res.text();
+          Swal.fire({
+            icon: "error",
+            title: "Falha no envio",
+            text: "Não foi possível enviar o link de redefinição.",
+            confirmButtonColor: "#9333ea",
+          });
+          console.error("Falha ao solicitar redefinição:", errorText);
+        }
+      } catch (err) {
+        Swal.fire({
+          icon: "error",
+          title: "Erro inesperado",
+          text: "Ocorreu um problema. Tente novamente mais tarde.",
+          confirmButtonColor: "#9333ea",
+        });
+        console.error(err);
+      } finally {
+        setProcessing(false);
       }
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setProcessing(false);
-    }
-  };
-
+    };
   return (
     <GuestLayout>
       <div className="mb-4 text-sm text-gray-600">

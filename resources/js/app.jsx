@@ -11,6 +11,7 @@ import Login from "./Pages/Auth/Login";
 import VerifyEmail from "./Pages/Auth/VerifyEmail";
 import EditProfile from "./Pages/Profile/EditProfile";
 import ForgotPassword from "./Pages/Auth/ForgotPassword";
+import ResetPassword from "./Pages/Auth/ResetPassword";
 import TransactionsIndex from "./Pages/Transactions/Index";
 import TransactionsGroups from "./Pages/Transactions/Groups";
 import TransactionsCategories from "./Pages/Transactions/Categories";
@@ -36,6 +37,7 @@ function App() {
                     <Route path="/login" element={<Login />} />
                     <Route path="/verify-email" element={<VerifyEmail />} />
                     <Route path="/forgot-password" element={<ForgotPassword />} />
+                    <Route path="/reset-password/:token" element={<ResetPassword />} />
                     <Route path="/transactions" element={<TransactionsIndex />} />
                     <Route path="/transactions/groups" element={<TransactionsGroups />} />
                     <Route path="/transactions/categories" element={<TransactionsCategories />} />

@@ -3,31 +3,47 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 
 class UserPreferenceController extends Controller
 {
-
-    public function index()
+    public function show(Request $request)
     {
-        $user = Auth::user();
+        $user = $request->user();
 
-        return response()->json($user->preferences ?? []);
+        $prefs = $user->preferences ? json_decode($user->preferences, true) : [];
+
+        $defaults = [
+            'theme' => 'light',
+            'language' => 'pt',
+            'emailNotifications' => false,
+            'updateNotifications' => false,
+            'transactionAlerts' => false,
+        ];
+
+        return response()->json(array_merge($defaults, $prefs));
     }
-
 
     public function update(Request $request)
     {
-        $user = Auth::user();
+        $user = $request->user();
 
-        $prefs = $request->all();
+        $data = $request->validate([
+            'theme' => 'in:light,dark',
+            'language' => 'in:pt,en',
+            'emailNotifications' => 'boolean',
+            'updateNotifications' => 'boolean',
+            'transactionAlerts' => 'boolean',
+        ]);
 
-        $user->preferences = $prefs;
+        $prefs = $user->preferences ? json_decode($user->preferences, true) : [];
+        $updated = array_merge($prefs, $data);
+
+        $user->preferences = json_encode($updated);
         $user->save();
-
+        app()->setLocale($data['language'] ?? 'pt');
         return response()->json([
-            'success' => true,
-            'preferences' => $prefs
+            'message' => 'Preferências atualizadas com sucesso',
+            'preferences' => $updated,
         ]);
     }
 }
