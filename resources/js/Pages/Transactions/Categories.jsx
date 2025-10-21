@@ -1,8 +1,12 @@
 import React, { useEffect, useState } from "react";
 import Shell from "../../Layouts/Shell";
 import { api } from "../../bootstrap";
+import { useTranslation } from "react-i18next";
+import Swal from "sweetalert2";
 
 export default function Categories() {
+  const { t } = useTranslation();
+
   const [list, setList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [form, setForm] = useState({ name: "", type: "entrada" });
@@ -24,12 +28,16 @@ export default function Categories() {
   }, []);
 
   async function create() {
-    if (!form.name.trim()) return;
+    if (!form.name.trim()) {
+      Swal.fire(t("alerts.warning"), t("categories.new"), "warning");
+      return;
+    }
     await api("/api/categories", {
       method: "POST",
       body: form,
     });
     setForm({ name: "", type: "entrada" });
+    Swal.fire(t("alerts.success"), t("alerts.saved"), "success");
     await load();
   }
 
@@ -41,53 +49,69 @@ export default function Categories() {
     });
     setEditingId(null);
     setEditData({ name: "", type: "entrada" });
+    Swal.fire(t("alerts.success"), t("alerts.updated"), "success");
     await load();
   }
 
   async function remove(id) {
-    if (!confirm("Excluir esta categoria?")) return;
+    const result = await Swal.fire({
+      title: t("alerts.confirm_delete"),
+      text: t("categories.title"),
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: t("buttons.confirm"),
+      cancelButtonText: t("buttons.cancel"),
+    });
+
+    if (!result.isConfirmed) return;
+
     await api(`/api/categories/${id}`, { method: "DELETE" });
+    Swal.fire(t("alerts.success"), t("alerts.deleted"), "success");
     await load();
   }
 
   return (
     <Shell>
       <h1 className="text-2xl font-bold mb-4 text-slate-900 dark:text-white transition-colors duration-300">
-        Categorias
+        {t("categories.title")}
       </h1>
 
+      {/* Nova categoria */}
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow ring-1 ring-slate-200 dark:ring-gray-700 p-4 mb-6 transition-colors duration-300">
         <h2 className="font-semibold mb-3 text-slate-900 dark:text-white">
-          Nova categoria
+          {t("categories.new")}
         </h2>
         <div className="flex items-center gap-2 flex-wrap">
           <input
             value={form.name}
             onChange={(e) => setForm({ ...form, name: e.target.value })}
-            placeholder="Nome da categoria (ex.: Alimentação, Transporte...)"
-            className="border border-slate-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-slate-900 dark:text-gray-100 rounded-lg p-2 flex-1 min-w-[180px] transition-colors duration-300"
+            placeholder={t("categories.add")}
+            className="border border-slate-300 dark:border-gray-600 bg-white dark:bg-gray-700 
+                       text-slate-900 dark:text-gray-100 rounded-lg p-2 flex-1 min-w-[180px] transition-colors duration-300"
           />
           <select
             value={form.type}
             onChange={(e) => setForm({ ...form, type: e.target.value })}
-            className="border border-slate-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-slate-900 dark:text-gray-100 rounded-lg p-2 transition-colors duration-300"
+            className="border border-slate-300 dark:border-gray-600 bg-white dark:bg-gray-700 
+                       text-slate-900 dark:text-gray-100 rounded-lg p-2 transition-colors duration-300"
           >
-            <option value="entrada">Entrada</option>
-            <option value="saida">Saída</option>
+            <option value="entrada">{t("transactions.income")}</option>
+            <option value="saida">{t("transactions.expense")}</option>
           </select>
           <button
             onClick={create}
             className="px-4 py-2 rounded-lg bg-violet-700 text-white hover:bg-violet-800 transition"
           >
-            Adicionar
+            {t("buttons.add")}
           </button>
         </div>
       </div>
 
+      {/* Lista de categorias */}
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow ring-1 ring-slate-200 dark:ring-gray-700 transition-colors duration-300">
         <div className="p-4 pb-0">
           <h3 className="font-semibold mb-3 text-slate-900 dark:text-white">
-            Lista de categorias
+            {t("categories.list")}
           </h3>
         </div>
 
@@ -95,22 +119,22 @@ export default function Categories() {
           <table className="min-w-full text-sm bg-white dark:bg-gray-800 text-slate-900 dark:text-gray-100 transition-colors duration-300">
             <thead>
               <tr className="bg-slate-50 dark:bg-gray-700 text-slate-700 dark:text-gray-200">
-                <th className="text-left p-3 font-semibold">Nome</th>
-                <th className="text-left p-3 font-semibold">Tipo</th>
-                <th className="text-right p-3 font-semibold">Ações</th>
+                <th className="text-left p-3 font-semibold">{t("account.name")}</th>
+                <th className="text-left p-3 font-semibold">{t("categories.type")}</th>
+                <th className="text-right p-3 font-semibold">{t("transactions.actions")}</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 <tr>
                   <td colSpan="3" className="p-6 text-center">
-                    Carregando...
+                    {t("transactions.loading")}
                   </td>
                 </tr>
               ) : list.length === 0 ? (
                 <tr>
                   <td colSpan="3" className="p-6 text-center">
-                    Nenhuma categoria
+                    {t("categories.no_categories")}
                   </td>
                 </tr>
               ) : (
@@ -126,7 +150,8 @@ export default function Categories() {
                           onChange={(e) =>
                             setEditData({ ...editData, name: e.target.value })
                           }
-                          className="border border-slate-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-slate-900 dark:text-gray-100 rounded p-1 w-full transition-colors duration-300"
+                          className="border border-slate-300 dark:border-gray-600 bg-white dark:bg-gray-700 
+                                     text-slate-900 dark:text-gray-100 rounded p-1 w-full transition-colors duration-300"
                         />
                       ) : (
                         c.name
@@ -139,13 +164,14 @@ export default function Categories() {
                           onChange={(e) =>
                             setEditData({ ...editData, type: e.target.value })
                           }
-                          className="border border-slate-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-slate-900 dark:text-gray-100 rounded p-1 transition-colors duration-300"
+                          className="border border-slate-300 dark:border-gray-600 bg-white dark:bg-gray-700 
+                                     text-slate-900 dark:text-gray-100 rounded p-1 transition-colors duration-300"
                         >
-                          <option value="entrada">Entrada</option>
-                          <option value="saida">Saída</option>
+                          <option value="entrada">{t("transactions.income")}</option>
+                          <option value="saida">{t("transactions.expense")}</option>
                         </select>
                       ) : (
-                        c.type
+                        t(`transactions.${c.type === "entrada" ? "income" : "expense"}`)
                       )}
                     </td>
                     <td className="p-3 text-right">
@@ -155,7 +181,7 @@ export default function Categories() {
                             onClick={() => saveEdit(c.id)}
                             className="text-green-600 hover:underline"
                           >
-                            Salvar
+                            {t("buttons.save")}
                           </button>
                           <button
                             onClick={() => {
@@ -164,7 +190,7 @@ export default function Categories() {
                             }}
                             className="text-slate-600 dark:text-gray-300 hover:underline"
                           >
-                            Cancelar
+                            {t("buttons.cancel")}
                           </button>
                         </div>
                       ) : (
@@ -176,13 +202,13 @@ export default function Categories() {
                             }}
                             className="text-violet-600 hover:underline"
                           >
-                            Editar
+                            {t("buttons.edit")}
                           </button>
                           <button
                             onClick={() => remove(c.id)}
                             className="text-red-600 hover:underline"
                           >
-                            Excluir
+                            {t("buttons.delete")}
                           </button>
                         </div>
                       )}

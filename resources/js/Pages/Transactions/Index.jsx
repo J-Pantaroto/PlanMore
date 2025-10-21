@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState, useCallback } from "react";
 import Shell from "../../Layouts/Shell";
 import { api } from "../../bootstrap";
 import Swal from "sweetalert2";
+import { useTranslation } from "react-i18next";
 
 const money = (n) =>
   (Number(n) || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -18,7 +19,6 @@ const fmtDate = (s) => {
 
 function Modal({ open, onClose, title, children }) {
   if (!open) return null;
-
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center px-2 sm:px-4"
@@ -26,13 +26,7 @@ function Modal({ open, onClose, title, children }) {
       aria-modal="true"
       onKeyDown={(e) => e.key === "Escape" && onClose()}
     >
-      {/* Fundo escuro translúcido */}
-      <div
-        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
-        onClick={onClose}
-      />
-
-      {/* Conteúdo do modal */}
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
       <div
         className="
           relative z-10 w-full max-w-lg max-h-[90vh] overflow-y-auto
@@ -50,7 +44,6 @@ function Modal({ open, onClose, title, children }) {
             ✕
           </button>
         </div>
-
         <div className="p-5 space-y-3 text-slate-800 dark:text-gray-100">{children}</div>
       </div>
     </div>
@@ -58,6 +51,8 @@ function Modal({ open, onClose, title, children }) {
 }
 
 export default function TransactionsIndex() {
+  const { t } = useTranslation();
+
   const today = new Date();
   const yyyy = today.getFullYear();
   const mm = String(today.getMonth() + 1).padStart(2, "0");
@@ -82,8 +77,6 @@ export default function TransactionsIndex() {
 
   const [categories, setCategories] = useState([]);
   const [groups, setGroups] = useState([]);
-  const [editingId, setEditingId] = useState(null);
-  const [editForm, setEditForm] = useState({});
   const [openModal, setOpenModal] = useState(false);
 
   const [modalForm, setModalForm] = useState({
@@ -154,11 +147,11 @@ export default function TransactionsIndex() {
 
   async function saveFromModal() {
     if (!modalForm.category_id) {
-      Swal.fire("Categoria obrigatória", "Selecione uma categoria.", "warning");
+      Swal.fire(t("alerts.warning"), t("transactions.category"), "warning");
       return;
     }
     if (!modalForm.valor || Number(modalForm.valor) <= 0) {
-      Swal.fire("Valor inválido", "Informe um valor maior que zero.", "warning");
+      Swal.fire(t("alerts.warning"), t("transactions.value"), "warning");
       return;
     }
 
@@ -178,14 +171,14 @@ export default function TransactionsIndex() {
       };
 
       await api("/api/transactions", { method: "POST", body: apiPayload });
-      Swal.fire("Sucesso", "Transação cadastrada com sucesso!", "success");
+      Swal.fire(t("alerts.success"), t("alerts.saved"), "success");
 
       setOpenModal(false);
       resetModal();
       setPage(1);
       await fetchAll();
     } catch (e) {
-      Swal.fire("Erro", e?.message || "Erro ao salvar a transação.", "error");
+      Swal.fire(t("alerts.error"), e?.message || t("alerts.error"), "error");
     }
   }
 
@@ -199,7 +192,7 @@ export default function TransactionsIndex() {
   return (
     <Shell>
       <h1 className="text-2xl font-bold mb-4 text-slate-900 dark:text-white transition-colors duration-300">
-        Gerenciar Transações
+        {t("transactions.manage")}
       </h1>
 
       <div className="mb-6">
@@ -207,20 +200,19 @@ export default function TransactionsIndex() {
           onClick={() => setOpenModal(true)}
           className="inline-flex items-center justify-center rounded-lg bg-violet-700 text-white px-4 py-2 text-sm font-medium shadow-sm hover:bg-violet-800 transition"
         >
-          Cadastrar nova transação
+          {t("transactions.new")}
         </button>
       </div>
 
-      {/* Filtros */}
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow ring-1 ring-slate-200 dark:ring-gray-700 p-4 mb-6 grid grid-cols-1 md:grid-cols-6 gap-3 transition-colors duration-300">
         <select
           value={filters.type}
           onChange={(e) => setFilters({ ...filters, type: e.target.value })}
           className="border border-slate-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-slate-900 dark:text-gray-100 rounded-lg p-2"
         >
-          <option value="">Tipo (todos)</option>
-          <option value="entrada">Entrada</option>
-          <option value="saida">Saída</option>
+          <option value="">{t("transactions.type")}</option>
+          <option value="entrada">{t("transactions.income")}</option>
+          <option value="saida">{t("transactions.expense")}</option>
         </select>
 
         <select
@@ -228,7 +220,7 @@ export default function TransactionsIndex() {
           onChange={(e) => setFilters({ ...filters, category_id: e.target.value })}
           className="border border-slate-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-slate-900 dark:text-gray-100 rounded-lg p-2"
         >
-          <option value="">Categoria</option>
+          <option value="">{t("transactions.category")}</option>
           {categories.map((c) => (
             <option key={c.id} value={c.id}>{c.name}</option>
           ))}
@@ -239,7 +231,7 @@ export default function TransactionsIndex() {
           onChange={(e) => setFilters({ ...filters, group_id: e.target.value })}
           className="border border-slate-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-slate-900 dark:text-gray-100 rounded-lg p-2"
         >
-          <option value="">Grupo</option>
+          <option value="">{t("transactions.group")}</option>
           {groups.map((g) => (
             <option key={g.id} value={g.id}>{g.name}</option>
           ))}
@@ -253,37 +245,38 @@ export default function TransactionsIndex() {
         />
 
         <input
-          placeholder="Buscar descrição..."
+          placeholder={t("transactions.search_description")}
           value={filters.search}
           onChange={(e) => setFilters({ ...filters, search: e.target.value })}
           className="border border-slate-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-slate-900 dark:text-gray-100 rounded-lg p-2 md:col-span-2"
         />
       </div>
 
-      {/* Tabela */}
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow ring-1 ring-slate-200 dark:ring-gray-700 transition-colors duration-300">
         <div className="p-4 pb-0">
-          <h3 className="font-semibold mb-3 text-slate-900 dark:text-white">Transações recentes</h3>
+          <h3 className="font-semibold mb-3 text-slate-900 dark:text-white">
+            {t("transactions.recent")}
+          </h3>
         </div>
 
         <div className="overflow-x-auto">
           <table className="min-w-full text-sm bg-white dark:bg-gray-800 text-slate-900 dark:text-gray-100 transition-colors duration-300">
             <thead>
               <tr className="bg-slate-50 dark:bg-gray-700 text-slate-700 dark:text-gray-200">
-                <th className="text-left p-3 font-semibold">Data</th>
-                <th className="text-left p-3 font-semibold">Descrição</th>
-                <th className="text-left p-3 font-semibold">Categoria</th>
-                <th className="text-left p-3 font-semibold">Grupo</th>
-                <th className="text-right p-3 font-semibold">Valor</th>
-                <th className="text-left p-3 font-semibold">Parcela</th>
-                <th className="text-left p-3 font-semibold">Recorrente</th>
+                <th className="text-left p-3 font-semibold">{t("transactions.date")}</th>
+                <th className="text-left p-3 font-semibold">{t("transactions.description")}</th>
+                <th className="text-left p-3 font-semibold">{t("transactions.category")}</th>
+                <th className="text-left p-3 font-semibold">{t("transactions.group")}</th>
+                <th className="text-right p-3 font-semibold">{t("transactions.value")}</th>
+                <th className="text-left p-3 font-semibold">{t("transactions.parcel")}</th>
+                <th className="text-left p-3 font-semibold">{t("transactions.recurring")}</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan="7" className="p-6 text-center">Carregando...</td></tr>
+                <tr><td colSpan="7" className="p-6 text-center">{t("transactions.loading")}</td></tr>
               ) : list.length === 0 ? (
-                <tr><td colSpan="7" className="p-6 text-center">Sem registros</td></tr>
+                <tr><td colSpan="7" className="p-6 text-center">{t("transactions.no_records")}</td></tr>
               ) : (
                 list.map((row) => (
                   <tr key={row.id} className="border-t border-slate-100 dark:border-gray-700">
@@ -304,176 +297,6 @@ export default function TransactionsIndex() {
           </table>
         </div>
       </div>
-      <Modal open={openModal} onClose={() => setOpenModal(false)} title="Cadastrar Transação">
-        <div className="space-y-3 text-slate-800 dark:text-gray-100 transition-colors duration-300">
-          <div>
-            <label className="block mb-1 font-medium">Tipo</label>
-            <select
-              className="w-full border border-slate-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-slate-900 dark:text-gray-100 rounded-lg p-2"
-              value={modalForm.tipo}
-              onChange={(e) => setModalForm({ ...modalForm, tipo: e.target.value })}
-            >
-              <option>Receita</option>
-              <option>Despesa</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block mb-1 font-medium">Categoria</label>
-            <select
-              className="w-full border border-slate-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-slate-900 dark:text-gray-100 rounded-lg p-2"
-              value={modalForm.category_id}
-              onChange={(e) => setModalForm({ ...modalForm, category_id: e.target.value })}
-            >
-              <option value="">Selecione</option>
-              {categories.map((c) => (
-                <option key={c.id} value={c.id}>{c.name}</option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="block mb-1 font-medium">Grupo (opcional)</label>
-            <select
-              className="w-full border border-slate-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-slate-900 dark:text-gray-100 rounded-lg p-2"
-              value={modalForm.group_id}
-              onChange={(e) => setModalForm({ ...modalForm, group_id: e.target.value })}
-            >
-              <option value="">Sem grupo</option>
-              {groups.map((g) => (
-                <option key={g.id} value={g.id}>{g.name}</option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="block mb-1 font-medium">Valor</label>
-            <input
-              className="w-full border border-slate-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-slate-900 dark:text-gray-100 rounded-lg p-2"
-              type="number"
-              step="0.01"
-              placeholder="Ex: 1200.00"
-              value={modalForm.valor}
-              onChange={(e) => setModalForm({ ...modalForm, valor: e.target.value })}
-            />
-          </div>
-
-          <div>
-            <label className="block mb-1 font-medium">Data</label>
-            <input
-              className="w-full border border-slate-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-slate-900 dark:text-gray-100 rounded-lg p-2"
-              type="date"
-              value={String(modalForm.datetime).slice(0, 10)}
-              onChange={(e) =>
-                setModalForm({
-                  ...modalForm,
-                  datetime: e.target.value + "T00:00",
-                })
-              }
-            />
-          </div>
-
-          <div>
-            <label className="block mb-1 font-medium">Observação</label>
-            <textarea
-              className="w-full border border-slate-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-slate-900 dark:text-gray-100 rounded-lg p-2"
-              rows={2}
-              placeholder="Opcional"
-              value={modalForm.observacao}
-              onChange={(e) => setModalForm({ ...modalForm, observacao: e.target.value })}
-            />
-          </div>
-
-          <div className="flex items-center gap-2">
-            <input
-              id="parcelado"
-              type="checkbox"
-              checked={modalForm.parcelado}
-              onChange={(e) => setModalForm({ ...modalForm, parcelado: e.target.checked })}
-            />
-            <label htmlFor="parcelado" className="font-medium">Parcelado</label>
-          </div>
-
-          {modalForm.parcelado && (
-            <div>
-              <label className="block mb-1 font-medium">Número de parcelas</label>
-              <input
-                type="number"
-                min="1"
-                max="120"
-                className="w-full border border-slate-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-slate-900 dark:text-gray-100 rounded-lg p-2"
-                value={modalForm.parcelas}
-                onChange={(e) => setModalForm({ ...modalForm, parcelas: e.target.value })}
-              />
-            </div>
-          )}
-
-          <div className="flex items-center gap-2">
-            <input
-              id="recorrente"
-              type="checkbox"
-              checked={modalForm.recorrente}
-              onChange={(e) =>
-                setModalForm({
-                  ...modalForm,
-                  recorrente: e.target.checked,
-                  parcelado: e.target.checked ? false : modalForm.parcelado,
-                })
-              }
-            />
-            <label htmlFor="recorrente" className="font-medium">Recorrente</label>
-          </div>
-
-          {modalForm.recorrente && (
-            <>
-              <div>
-                <label className="block mb-1 font-medium">Intervalo</label>
-                <select
-                  className="w-full border border-slate-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-slate-900 dark:text-gray-100 rounded-lg p-2"
-                  value={modalForm.intervalo}
-                  onChange={(e) => setModalForm({ ...modalForm, intervalo: e.target.value })}
-                >
-                  <option value="daily">Diária</option>
-                  <option value="weekly">Semanal</option>
-                  <option value="monthly">Mensal</option>
-                  <option value="yearly">Anual</option>
-                </select>
-              </div>
-              <div>
-                <label className="block mb-1 font-medium">Até</label>
-                <input
-                  className="w-full border border-slate-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-slate-900 dark:text-gray-100 rounded-lg p-2"
-                  type="date"
-                  value={modalForm.fim}
-                  onChange={(e) => setModalForm({ ...modalForm, fim: e.target.value })}
-                />
-              </div>
-            </>
-          )}
-
-          {modalForm.parcelado && modalForm.recorrente && (
-            <p className="text-xs text-yellow-600 dark:text-yellow-400">
-              Obs.: quando "Parcelado" está ativo, a recorrência é ignorada pela API. Use apenas um dos dois.
-            </p>
-          )}
-
-          <div className="pt-3 flex items-center gap-2 justify-end">
-            <button
-              onClick={saveFromModal}
-              className="px-4 py-2 rounded-lg bg-violet-700 text-white hover:bg-violet-800 transition"
-            >
-              Confirmar
-            </button>
-            <button
-              onClick={() => setOpenModal(false)}
-              className="px-4 py-2 rounded-lg bg-slate-100 dark:bg-gray-700 text-slate-900 dark:text-gray-100 hover:bg-slate-200 dark:hover:bg-gray-600 transition"
-            >
-              Cancelar
-            </button>
-          </div>
-        </div>
-      </Modal>
-
     </Shell>
   );
 }

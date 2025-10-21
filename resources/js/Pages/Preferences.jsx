@@ -12,7 +12,7 @@ export default function Preferences() {
     return (
       <Shell>
         <div className="text-center py-20 text-gray-500 dark:text-gray-400">
-          Carregando preferências...
+          {t("transactions.loading")}
         </div>
       </Shell>
     );
@@ -21,8 +21,8 @@ export default function Preferences() {
     await updatePrefs(newPrefs);
     Swal.fire({
       icon: "success",
-      title: "Preferência salva!",
-      text: "Suas alterações foram aplicadas com sucesso.",
+      title: t("alerts.success"),
+      text: t("alerts.saved"),
       confirmButtonColor: "#9333ea",
       background: "#1e1b4b",
       color: "#fff",
@@ -33,14 +33,14 @@ export default function Preferences() {
 
   const handleReset = () => {
     Swal.fire({
-      title: "Restaurar padrões?",
-      text: "Todas as preferências serão redefinidas para o padrão original.",
+      title: t("preferences.reset"),
+      text: t("alerts.confirm_delete"),
       icon: "warning",
       showCancelButton: true,
       confirmButtonColor: "#9333ea",
       cancelButtonColor: "#6b7280",
-      confirmButtonText: "Sim, restaurar",
-      cancelButtonText: "Cancelar",
+      confirmButtonText: t("buttons.confirm"),
+      cancelButtonText: t("buttons.cancel"),
       background: "#1e1b4b",
       color: "#fff",
     }).then(async (result) => {
@@ -48,8 +48,8 @@ export default function Preferences() {
         await resetPrefs();
         Swal.fire({
           icon: "success",
-          title: "Preferências restauradas!",
-          text: "Tudo voltou ao padrão original.",
+          title: t("alerts.success"),
+          text: t("alerts.updated"),
           confirmButtonColor: "#9333ea",
           background: "#1e1b4b",
           color: "#fff",
@@ -66,13 +66,12 @@ export default function Preferences() {
     <Shell>
       <div className="px-12 py-10 text-gray-900 dark:text-gray-100 min-h-screen">
         <h1 className="text-2xl font-extrabold mb-10 text-gray-900 dark:text-white">
-          Preferências do Usuário
+          {t("preferences.title")}
         </h1>
 
-        {/* ===== IDIOMA ===== */}
         <section className="mb-12">
           <h2 className="text-xs font-bold uppercase tracking-widest text-gray-700 dark:text-gray-300 mb-3">
-            Idioma
+            {t("preferences.language")}
           </h2>
           <select
             value={prefs.language}
@@ -81,56 +80,52 @@ export default function Preferences() {
                        text-base bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 
                        focus:outline-none focus:ring-2 focus:ring-purple-600 transition-all shadow-sm"
           >
-            <option value="pt">Português (Brasil)</option>
-            <option value="en">Inglês</option>
-            <option value="es">Espanhol</option>
+            <option value="pt">{t("languages.pt") || "Português (Brasil)"}</option>
+            <option value="en">{t("languages.en") || "English"}</option>
           </select>
         </section>
 
-        {/* ===== NOTIFICAÇÕES ===== */}
         <section className="mb-12">
           <h2 className="text-xs font-bold uppercase tracking-widest text-gray-700 dark:text-gray-300 mb-4">
-            Notificações
+            {t("preferences.notifications")}
           </h2>
           <div className="flex flex-col gap-4">
             <Switch
-              label="Enviar notificações por e-mail"
+              label={t("preferences.email_notifications")}
               checked={prefs.emailNotifications}
               onChange={() => toggle("emailNotifications")}
             />
             <Switch
-              label="Notificar sobre atualizações"
+              label={t("preferences.update_notifications")}
               checked={prefs.updateNotifications}
               onChange={() => toggle("updateNotifications")}
             />
             <Switch
-              label="Alertas de transações"
+              label={t("preferences.transaction_alerts")}
               checked={prefs.transactionAlerts}
               onChange={() => toggle("transactionAlerts")}
             />
           </div>
         </section>
 
-        {/* ===== TEMA ===== */}
         <section className="mb-10">
           <h2 className="text-xs font-bold uppercase tracking-widest text-gray-700 dark:text-gray-300 mb-4">
-            Tema do Sistema
+            {t("preferences.theme")}
           </h2>
           <div className="flex gap-4 text-base">
             <ThemeOption
-              label="Claro"
+              label={t("preferences.light")}
               selected={prefs.theme === "light"}
               onSelect={() => handleUpdate({ theme: "light" })}
             />
             <ThemeOption
-              label="Escuro"
+              label={t("preferences.dark")}
               selected={prefs.theme === "dark"}
               onSelect={() => handleUpdate({ theme: "dark" })}
             />
           </div>
         </section>
 
-        {/* ===== BOTÃO RESTAURAR ===== */}
         <div className="mt-12">
           <button
             onClick={handleReset}
@@ -138,7 +133,7 @@ export default function Preferences() {
                        text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800
                        hover:text-purple-700 dark:hover:text-purple-400 transition-all duration-200"
           >
-            Restaurar padrões
+            {t("preferences.reset")}
           </button>
         </div>
       </div>
@@ -146,7 +141,6 @@ export default function Preferences() {
   );
 }
 
-/* === COMPONENTES INTERNOS === */
 function Switch({ label, checked, onChange }) {
   return (
     <label

@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Inertia\Response;
+use Illuminate\Support\Facades\Log;
 
 class AuthenticatedSessionController extends Controller
 {
@@ -29,24 +30,32 @@ class AuthenticatedSessionController extends Controller
      */
     public function store(LoginRequest $request): RedirectResponse
     {
+        
         $request->authenticate();
 
         $request->session()->regenerate();
 
-        return redirect()->intended(route('dashboard', absolute: false));
+        $user = Auth::user();
+        $theme = $user->preferences['theme'] ?? 'light'; 
+
+        session()->put('theme', $theme);
+
+        return redirect()->intended(route('dashboard'));
     }
 
     /**
      * Destroy an authenticated session.
      */
-    public function destroy(Request $request): RedirectResponse
-    {
-        Auth::guard('web')->logout();
+public function destroy(Request $request): RedirectResponse
+{
+    Auth::guard('web')->logout();
 
-        $request->session()->invalidate();
+    Cookie::queue(Cookie::forget('XSRF-TOKEN'));
+    Cookie::queue(Cookie::forget('laravel_session'));
 
-        $request->session()->regenerateToken();
+    $request->session()->invalidate();
+    $request->session()->regenerateToken();
 
-        return redirect('/');
-    }
+    return redirect()->route('/');
+}
 }

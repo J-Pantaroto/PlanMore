@@ -52,7 +52,7 @@ Route::middleware('auth')->group(function () {
 
     Route::post('/email/verification-notification', function (Request $request) {
         $request->user()->sendEmailVerificationNotification();
-        return response()->json(['message' => 'E-mail de verificação enviado com sucesso!']);
+        return response()->json(['message' => 'E-mail de verificaÃ§Ã£o enviado com sucesso!']);
     })->middleware(['throttle:1,1'])->name('verification.send');
 
     Route::get('confirm-password', [ConfirmablePasswordController::class, 'show'])

@@ -26,7 +26,7 @@
     "manage": "Gerenciar Transações",
     "new": "Cadastrar nova transação",
     "recent": "Transações recentes",
-    "type": "Tipo",
+    "type": "Tipo (todos)",
     "income": "Entrada",
     "expense": "Saída",
     "category": "Categoria",
@@ -120,5 +120,16 @@
     "back": "Voltar",
     "previous": "Anterior",
     "next": "Próxima"
+  },
+  "months": {
+  "january": "Janeiro",
+  "february": "Fevereiro",
+  "march": "Março",
+  "april": "Abril",
+  "may": "Maio"
+  },
+  "languages": {
+  "en": "Inglês",
+  "pt": "Português"
   }
 }

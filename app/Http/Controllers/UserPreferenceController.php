@@ -10,7 +10,9 @@ class UserPreferenceController extends Controller
     {
         $user = $request->user();
 
-        $prefs = $user->preferences ? json_decode($user->preferences, true) : [];
+        $prefs = is_array($user->preferences)
+            ? $user->preferences
+            : (json_decode($user->preferences, true) ?? []);
 
         $defaults = [
             'theme' => 'light',
@@ -28,19 +30,24 @@ class UserPreferenceController extends Controller
         $user = $request->user();
 
         $data = $request->validate([
-            'theme' => 'in:light,dark',
-            'language' => 'in:pt,en',
+            'theme' => 'nullable|in:light,dark',
+            'language' => 'nullable|in:pt,en',
             'emailNotifications' => 'boolean',
             'updateNotifications' => 'boolean',
             'transactionAlerts' => 'boolean',
         ]);
 
-        $prefs = $user->preferences ? json_decode($user->preferences, true) : [];
+        $prefs = is_array($user->preferences)
+            ? $user->preferences
+            : (json_decode($user->preferences, true) ?? []);
+
         $updated = array_merge($prefs, $data);
 
-        $user->preferences = json_encode($updated);
+        $user->preferences = $updated;
         $user->save();
-        app()->setLocale($data['language'] ?? 'pt');
+
+        app()->setLocale($updated['language'] ?? 'pt');
+
         return response()->json([
             'message' => 'Preferências atualizadas com sucesso',
             'preferences' => $updated,
