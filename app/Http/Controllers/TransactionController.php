@@ -45,6 +45,7 @@ class TransactionController extends Controller
 
     public function store(Request $request)
     {
+        $user = $request->user();
         $data = $request->validate([
             'type' => 'required|in:entrada,saida',
             'amount' => 'required|numeric|min:0.01',
@@ -106,6 +107,50 @@ class TransactionController extends Controller
         }
 
         $createdOne = Transaction::create($data);
+        $rules = AutomationRule::where('user_id', Auth::id())
+            ->where('is_active', true)
+            ->get();
+        foreach ($created as $tx) {
+            foreach ($rules as $rule) {
+                $actions = json_decode($rule->actions, true);
+
+                if (!empty($rule->match_text) && stripos($tx->description ?? '', $rule->match_text) === false) {
+                    continue;
+                }
+
+                if (!empty($actions['set_category'])) {
+                    $tx->category_id = $actions['set_category'];
+                }
+                if (!empty($actions['set_group'])) {
+                    $tx->group_id = $actions['set_group'];
+                }
+                if (!empty($actions['mark_recurring'])) {
+                    $tx->is_recurring = true;
+                    $tx->recurrence_interval = $actions['mark_recurring'];
+                }
+
+                if (!empty($actions['goal_id'])) {
+                    $percent = $actions['goal_percent'] ?? null;
+                    $fixed = $actions['goal_fixed'] ?? null;
+
+                    $amount = $percent
+                        ? $tx->amount * ($percent / 100)
+                        : ($fixed ?? 0);
+
+                    if ($amount > 0) {
+                        GoalAllocation::create([
+                            'goal_id' => $actions['goal_id'],
+                            'transaction_id' => $tx->id,
+                            'amount' => $amount,
+                            'rule_name' => $rule->name,
+                        ]);
+                    }
+                }
+
+                $tx->save();
+            }
+        }
+
         return response()->json(['message' => 'Transação criada!', 'transaction' => $createdOne], 201);
     }
 

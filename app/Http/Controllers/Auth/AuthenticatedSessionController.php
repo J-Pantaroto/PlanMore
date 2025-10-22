@@ -28,34 +28,58 @@ class AuthenticatedSessionController extends Controller
     /**
      * Handle an incoming authentication request.
      */
-    public function store(LoginRequest $request): RedirectResponse
+    public function store(LoginRequest $request)
     {
-        
         $request->authenticate();
-
         $request->session()->regenerate();
 
         $user = Auth::user();
-        $theme = $user->preferences['theme'] ?? 'light'; 
 
-        session()->put('theme', $theme);
+        $preferences = $user->preferences ? json_decode($user->preferences, true) : [];
+        $theme = $preferences['theme'] ?? 'light';
+        $locale = $preferences['locale'] ?? 'pt';
+
+        session([
+            'theme' => $theme,
+            'locale' => $locale,
+        ]);
+
+        if ($request->wantsJson() || $request->ajax()) {
+            $response = response()->json([
+                'message' => 'Login realizado com sucesso',
+                'theme'   => $theme,
+                'locale'  => $locale,
+                'csrf'    => csrf_token(),
+                'user'    => $user->only(['id', 'name', 'email']),
+            ]);
+
+            $response->withCookie(
+                cookie()->forever(config('session.cookie'), session()->getId())
+            );
+
+            return $response;
+        }
 
         return redirect()->intended(route('dashboard'));
     }
 
+
     /**
      * Destroy an authenticated session.
      */
-public function destroy(Request $request): RedirectResponse
-{
-    Auth::guard('web')->logout();
+    public function destroy(Request $request)
+    {
+        Auth::guard('web')->logout();
 
-    Cookie::queue(Cookie::forget('XSRF-TOKEN'));
-    Cookie::queue(Cookie::forget('laravel_session'));
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
 
-    $request->session()->invalidate();
-    $request->session()->regenerateToken();
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json(['message' => 'Logout realizado com sucesso']);
+        }
 
-    return redirect()->route('/');
-}
+        return redirect('/');
+    }
+
+
 }

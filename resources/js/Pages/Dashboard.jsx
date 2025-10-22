@@ -56,7 +56,6 @@ export default function Dashboard() {
         setSaidas(totalSaidas);
         setCategorias(data.categorias || []);
 
-        // 🔹 Gráfico com 2 datasets (Entradas e Saídas)
         if (chartInstance.current) chartInstance.current.destroy();
 
         const ctx = chartRef.current.getContext("2d");

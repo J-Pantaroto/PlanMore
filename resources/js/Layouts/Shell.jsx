@@ -29,6 +29,24 @@ export default function Shell({ children }) {
   const [openTx, setOpenTx] = useState(isTxSectionActive);
 
   useEffect(() => {
+    const savedTheme = localStorage.getItem("theme");
+    const root = document.documentElement;
+    if (savedTheme === "dark") {
+      root.classList.add("dark");
+      document.body.style.backgroundColor = "#0f172a";
+    } else {
+      root.classList.remove("dark");
+      document.body.style.backgroundColor = "#f9fafb";
+    }
+
+    const savedLocale = localStorage.getItem("locale") || "pt";
+    if (typeof window.i18next !== "undefined") {
+      window.i18next.changeLanguage(savedLocale);
+    }
+
+  }, []);
+
+  useEffect(() => {
     setOpenTx(isTxSectionActive);
   }, [isTxSectionActive]);
 
@@ -69,6 +87,8 @@ export default function Shell({ children }) {
           background: "#1e1b4b",
           color: "#fff",
         }).then(() => {
+          localStorage.removeItem("theme");
+          localStorage.removeItem("locale");
           window.location.href = "/login";
         });
       } else {
@@ -82,7 +102,6 @@ export default function Shell({ children }) {
 
   return (
     <div className="min-h-screen flex bg-gray-50 dark:bg-gray-900 text-slate-900 dark:text-slate-100 transition-colors duration-500">
-      {/* Sidebar */}
       <aside className="w-56 shrink-0 bg-white dark:bg-gray-800 border-r border-slate-200 dark:border-gray-700 p-5 flex flex-col transition-colors duration-500">
         <Link
           to="/dashboard"

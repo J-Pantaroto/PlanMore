@@ -62,7 +62,8 @@
     "set_group": "Set group (optional id)",
     "add_rule": "Add Rule",
     "active_rules": "Active Rules",
-    "no_rules": "No rules"
+    "no_rules": "No rules",
+    "goal": "Goals"
   },
   "groups": {
     "title": "Groups",
@@ -119,7 +120,8 @@
     "confirm": "Confirm",
     "back": "Back",
     "previous": "Previous",
-    "next": "Next"
+    "next": "Next",
+    "optional": "Optional"
   },
   "months": {
   "january": "January",
@@ -130,6 +132,6 @@
 },
   "languages": {
   "en": "English",
-  "pt": "Português"
+  "pt": "Portuguese"
   }
 }

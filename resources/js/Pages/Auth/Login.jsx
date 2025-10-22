@@ -3,7 +3,6 @@ import { Link, useNavigate } from "react-router-dom";
 import { route } from "ziggy-js";
 import Swal from "sweetalert2";
 import Checkbox from "@/Components/Checkbox";
-import InputError from "@/Components/InputError";
 import InputLabel from "@/Components/InputLabel";
 import PrimaryButton from "@/Components/PrimaryButton";
 import TextInput from "@/Components/TextInput";
@@ -29,77 +28,96 @@ export default function Login({ status = "", canResetPassword = true }) {
     }
   };
 
-const submit = async (e) => {
-  e.preventDefault();
-  setProcessing(true);
+  const submit = async (e) => {
+    e.preventDefault();
+    setProcessing(true);
 
-  try {
-    await fetch(route("sanctum.csrf-cookie"), { credentials: "include" });
+    try {
+      await fetch(route("sanctum.csrf-cookie"), { credentials: "include" });
 
-    const xsrfToken = document.cookie
-      .split("; ")
-      .find((row) => row.startsWith("XSRF-TOKEN="))
-      ?.split("=")[1];
+      const xsrfToken = document.cookie
+        .split("; ")
+        .find((row) => row.startsWith("XSRF-TOKEN="))
+        ?.split("=")[1];
 
-    const res = await fetch(route("login"), {
-      method: "POST",
-      credentials: "include",
-      headers: {
-        "Content-Type": "application/json",
-        "X-XSRF-TOKEN": decodeURIComponent(xsrfToken),
-        "X-Requested-With": "XMLHttpRequest",
-      },
-      body: JSON.stringify({
-        email: data.email,
-        password: data.password,
-        remember: data.remember,
-      }),
-    });
-
-    if (res.status === 422) {
-      Swal.fire({
-        icon: "error",
-        title: "Erro no login",
-        text: "Login ou senha incorretos.",
-        confirmButtonColor: "#d33",
-        confirmButtonText: "Tentar novamente",
+      const res = await fetch(route("login"), {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+          "X-XSRF-TOKEN": decodeURIComponent(xsrfToken),
+          "X-Requested-With": "XMLHttpRequest",
+          "Accept": "application/json",
+        },
+        body: JSON.stringify({
+          email: data.email,
+          password: data.password,
+          remember: data.remember,
+        }),
       });
-    } else if (res.ok) {
-      // Recuperar o tema diretamente do backend
-      const prefsRes = await res.json();  // Esperando que a resposta contenha o tema
-      if (prefsRes.theme) {
-        applyTheme(prefsRes.theme); // Aplicando o tema
+
+      if (res.status === 422) {
+        Swal.fire({
+          icon: "error",
+          title: "Erro no login",
+          text: "E-mail ou senha incorretos.",
+          confirmButtonColor: "#d33",
+        });
+        return;
       }
 
-      Swal.fire({
-        icon: "success",
-        title: "Bem-vindo!",
-        text: "Login realizado com sucesso!",
-        timer: 1800,
-        showConfirmButton: false,
-      });
+      if (res.ok) {
+        const prefsRes = await res.json();
 
-      navigate("/dashboard");
-    } else {
+        if (prefsRes.theme) {
+          applyTheme(prefsRes.theme);
+          localStorage.setItem("theme", prefsRes.theme);
+        }
+
+        if (prefsRes.locale) {
+          localStorage.setItem("locale", prefsRes.locale);
+        }
+
+        if (prefsRes.csrf) {
+          const meta = document.querySelector('meta[name="csrf-token"]');
+          if (meta) meta.setAttribute("content", prefsRes.csrf);
+          else {
+            const newMeta = document.createElement("meta");
+            newMeta.name = "csrf-token";
+            newMeta.content = prefsRes.csrf;
+            document.head.appendChild(newMeta);
+          }
+        }
+        Swal.fire({
+          icon: "success",
+          title: "Bem-vindo!",
+          text: "Login realizado com sucesso!",
+          timer: 1500,
+          showConfirmButton: false,
+        });
+
+        navigate("/dashboard");
+      } else {
+        Swal.fire({
+          icon: "error",
+          title: "Erro inesperado",
+          text: "Ocorreu um problema ao tentar entrar.",
+          confirmButtonColor: "#d33",
+        });
+      }
+    } catch (err) {
+      console.error(err);
       Swal.fire({
         icon: "error",
-        title: "Erro inesperado",
-        text: "Ocorreu um problema, tente novamente.",
+        title: "Erro de conexão",
+        text: "Não foi possível conectar ao servidor.",
         confirmButtonColor: "#d33",
       });
+    } finally {
+      setProcessing(false);
     }
-  } catch (err) {
-    console.error(err);
-    Swal.fire({
-      icon: "error",
-      title: "Erro de conexão",
-      text: "Não foi possível conectar ao servidor.",
-      confirmButtonColor: "#d33",
-    });
-  } finally {
-    setProcessing(false);
-  }
-};
+  };
+
   return (
     <GuestLayout>
       {status && (

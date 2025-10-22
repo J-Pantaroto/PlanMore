@@ -297,6 +297,181 @@ export default function TransactionsIndex() {
           </table>
         </div>
       </div>
+      <Modal
+        open={openModal}
+        onClose={() => setOpenModal(false)}
+        title={t("transactions.new")}
+      >
+        <div className="space-y-3 text-slate-800 dark:text-gray-100">
+          <div>
+            <label className="block mb-1 font-medium">{t("transactions.type")}</label>
+            <select
+              className="w-full border border-slate-300 dark:border-gray-600 rounded-lg p-2 bg-white dark:bg-gray-700 text-slate-900 dark:text-gray-100"
+              value={modalForm.tipo}
+              onChange={(e) => setModalForm({ ...modalForm, tipo: e.target.value })}
+            >
+              <option>{t("transactions.income")}</option>
+              <option>{t("transactions.expense")}</option>
+            </select>
+          </div>
+          <div>
+            <label className="block mb-1 font-medium">{t("transactions.category")}</label>
+            <select
+              className="w-full border border-slate-300 dark:border-gray-600 rounded-lg p-2 bg-white dark:bg-gray-700 text-slate-900 dark:text-gray-100"
+              value={modalForm.category_id}
+              onChange={(e) => setModalForm({ ...modalForm, category_id: e.target.value })}
+            >
+              <option value="">{t("transactions.category") || "Selecione"}</option>
+              {categories.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block mb-1 font-medium">{t("transactions.group")}</label>
+            <select
+              className="w-full border border-slate-300 dark:border-gray-600 rounded-lg p-2 bg-white dark:bg-gray-700 text-slate-900 dark:text-gray-100"
+              value={modalForm.group_id}
+              onChange={(e) => setModalForm({ ...modalForm, group_id: e.target.value })}
+            >
+              <option value="">{t("transactions.group")} (opcional)</option>
+              {groups.map((g) => (
+                <option key={g.id} value={g.id}>
+                  {g.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block mb-1 font-medium">{t("transactions.value")}</label>
+            <input
+              className="w-full border border-slate-300 dark:border-gray-600 rounded-lg p-2 bg-white dark:bg-gray-700 text-slate-900 dark:text-gray-100"
+              type="number"
+              step="0.01"
+              placeholder="Ex: 1200.00"
+              value={modalForm.valor}
+              onChange={(e) => setModalForm({ ...modalForm, valor: e.target.value })}
+            />
+          </div>
+          <div>
+            <label className="block mb-1 font-medium">{t("transactions.date")}</label>
+            <input
+              className="w-full border border-slate-300 dark:border-gray-600 rounded-lg p-2 bg-white dark:bg-gray-700 text-slate-900 dark:text-gray-100"
+              type="datetime-local"
+              value={modalForm.datetime}
+              onChange={(e) => setModalForm({ ...modalForm, datetime: e.target.value })}
+            />
+            <p className="text-xs text-slate-500 dark:text-gray-400 mt-1">
+              {t("transactions.note")} (a hora é apenas referência visual)
+            </p>
+          </div>
+          <div>
+            <label className="block mb-1 font-medium">{t("transactions.note")}</label>
+            <textarea
+              className="w-full border border-slate-300 dark:border-gray-600 rounded-lg p-2 bg-white dark:bg-gray-700 text-slate-900 dark:text-gray-100"
+              rows={2}
+              placeholder={t("transactions.note")}
+              value={modalForm.observacao}
+              onChange={(e) => setModalForm({ ...modalForm, observacao: e.target.value })}
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <input
+              id="parcelado"
+              type="checkbox"
+              checked={modalForm.parcelado}
+              onChange={(e) => setModalForm({ ...modalForm, parcelado: e.target.checked })}
+            />
+            <label htmlFor="parcelado" className="font-medium">
+              {t("transactions.installment")}
+            </label>
+          </div>
+
+          {modalForm.parcelado && (
+            <div>
+              <label className="block mb-1 font-medium">{t("transactions.installments_number")}</label>
+              <input
+                type="number"
+                min="1"
+                max="120"
+                className="w-full border border-slate-300 dark:border-gray-600 rounded-lg p-2 bg-white dark:bg-gray-700 text-slate-900 dark:text-gray-100"
+                value={modalForm.parcelas}
+                onChange={(e) => setModalForm({ ...modalForm, parcelas: e.target.value })}
+              />
+            </div>
+          )}
+          <div className="flex items-center gap-2">
+            <input
+              id="recorrente"
+              type="checkbox"
+              checked={modalForm.recorrente}
+              onChange={(e) =>
+                setModalForm({
+                  ...modalForm,
+                  recorrente: e.target.checked,
+                  parcelado: e.target.checked ? false : modalForm.parcelado,
+                })
+              }
+            />
+            <label htmlFor="recorrente" className="font-medium">
+              {t("transactions.recurring")}
+            </label>
+          </div>
+
+          {modalForm.recorrente && (
+            <>
+              <div>
+                <label className="block mb-1 font-medium">{t("transactions.interval")}</label>
+                <select
+                  className="w-full border border-slate-300 dark:border-gray-600 rounded-lg p-2 bg-white dark:bg-gray-700 text-slate-900 dark:text-gray-100"
+                  value={modalForm.intervalo}
+                  onChange={(e) => setModalForm({ ...modalForm, intervalo: e.target.value })}
+                >
+                  <option value="daily">{t("transactions.interval")} - Diária</option>
+                  <option value="weekly">{t("transactions.interval")} - Semanal</option>
+                  <option value="monthly">{t("transactions.interval")} - Mensal</option>
+                  <option value="yearly">{t("transactions.interval")} - Anual</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block mb-1 font-medium">{t("transactions.end")}</label>
+                <input
+                  className="w-full border border-slate-300 dark:border-gray-600 rounded-lg p-2 bg-white dark:bg-gray-700 text-slate-900 dark:text-gray-100"
+                  type="date"
+                  value={modalForm.fim}
+                  onChange={(e) => setModalForm({ ...modalForm, fim: e.target.value })}
+                />
+              </div>
+            </>
+          )}
+
+          {modalForm.parcelado && modalForm.recorrente && (
+            <p className="text-xs text-yellow-600 dark:text-yellow-400">
+              {t("transactions.warning_parcel_recurring") ||
+                "Obs.: quando 'Parcelado' está ativo, a recorrência é ignorada pela API. Use apenas um dos dois."}
+            </p>
+          )}
+
+          <div className="pt-3 flex justify-end gap-3">
+            <button
+              onClick={saveFromModal}
+              className="px-4 py-2 rounded-lg bg-violet-700 hover:bg-violet-800 text-white"
+            >
+              {t("transactions.confirm")}
+            </button>
+            <button
+              onClick={() => setOpenModal(false)}
+              className="px-4 py-2 rounded-lg bg-slate-200 dark:bg-gray-700 dark:text-gray-200 text-slate-800 hover:bg-slate-300 dark:hover:bg-gray-600"
+            >
+              {t("transactions.cancel")}
+            </button>
+          </div>
+        </div>
+      </Modal>
+
     </Shell>
   );
 }

@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
+use App\Http\Controllers\AutomationRuleController;
 use App\Http\Controllers\GoalController;
 use App\Http\Controllers\CategoryRecognitionController;
 use App\Http\Controllers\ExportController;
@@ -23,6 +24,7 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index']);
 });
+    Route::apiResource('automation-rules', AutomationRuleController::class);
 
     // Transactions CRUD
     Route::get('/transactions', [TransactionController::class, 'index']);

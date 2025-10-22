@@ -62,7 +62,8 @@
     "set_group": "Definir grupo (id opcional)",
     "add_rule": "Adicionar regra",
     "active_rules": "Regras ativas",
-    "no_rules": "Nenhuma regra"
+    "no_rules": "Nenhuma regra",
+    "goal": "Metas"
   },
   "groups": {
     "title": "Grupos",
@@ -119,7 +120,8 @@
     "confirm": "Confirmar",
     "back": "Voltar",
     "previous": "Anterior",
-    "next": "Próxima"
+    "next": "Próxima",
+    "optional": "Opcional"
   },
   "months": {
   "january": "Janeiro",
