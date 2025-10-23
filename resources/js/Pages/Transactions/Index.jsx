@@ -61,6 +61,8 @@ export default function TransactionsIndex() {
   const min = String(today.getMinutes()).padStart(2, "0");
 
   const [list, setList] = useState([]);
+  const [editingId, setEditingId] = useState(null);
+  const [editForm, setEditForm] = useState({});
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(20);
@@ -145,6 +147,104 @@ export default function TransactionsIndex() {
     [lastPage, total, perPage]
   );
 
+  async function saveEdit(id) {
+      try {
+        const payload = { ...editForm };
+        if (!payload.is_installment) {
+          delete payload.installments;
+          delete payload.installment_number;
+        }
+        if (!payload.is_recurring) {
+          delete payload.recurrence_interval;
+          delete payload.recurrence_end_date;
+        }
+        await api(`/api/transactions/${id}`, { method: "PUT", body: payload });
+
+        Swal.fire("Atualizado", "Transação editada com sucesso!", "success");
+
+        setEditingId(null);
+        await fetchAll();
+      } catch (e) {
+        Swal.fire("Erro", e?.message || "Erro ao atualizar.", "error");
+      }
+    }
+
+    async function cancelEdit() {
+      setEditingId(null);
+      setEditForm({});
+    }
+
+    function startEdit(row) {
+      setEditingId(row.id);
+      setEditForm({
+        tipo: row.type === "entrada" ? "Receita" : "Despesa",
+        category_id: row.category_id || "",
+        group_id: row.group_id || "",
+        valor: row.amount,
+        datetime: row.date + "T00:00",
+        observacao: row.description || "",
+        recorrente: row.is_recurring,
+        intervalo: row.recurrence_interval || "monthly",
+        fim: row.recurrence_end_date || "",
+        parcelado: row.is_installment,
+        parcelas: row.installments || 1,
+      });
+      setModalForm({
+        tipo: row.type === "entrada" ? "Receita" : "Despesa",
+        category_id: row.category_id || "",
+        group_id: row.group_id || "",
+        valor: row.amount,
+        datetime: row.date + "T00:00",
+        observacao: row.description || "",
+        recorrente: row.is_recurring,
+        intervalo: row.recurrence_interval || "monthly",
+        fim: row.recurrence_end_date || "",
+        parcelado: row.is_installment,
+        parcelas: row.installments || 1,
+      });
+      setOpenModal(true);
+    }
+    async function remove(id) {
+      const confirm = await Swal.fire({
+        title: "Excluir transação?",
+        text: "Essa ação não pode ser desfeita.",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Sim, excluir",
+        cancelButtonText: "Cancelar",
+      });
+
+      if (!confirm.isConfirmed) return;
+
+      try {
+        await api(`/api/transactions/${id}`, { method: "DELETE" });
+        Swal.fire("Excluída", "Transação removida com sucesso!", "success");
+        await fetchAll();
+      } catch (e) {
+        Swal.fire("Erro", e?.message || "Erro ao excluir.", "error");
+      }
+    }
+
+    async function removeBatch(id) {
+      const confirm = await Swal.fire({
+        title: "Excluir lote inteiro?",
+        text: "Isso vai apagar todas as parcelas/ocorrências ligadas.",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Sim, excluir tudo",
+        cancelButtonText: "Cancelar",
+      });
+
+      if (!confirm.isConfirmed) return;
+
+      try {
+        await api(`/api/transactions/${id}?delete_batch=1`, { method: "DELETE" });
+        Swal.fire("Excluído", "Lote removido com sucesso!", "success");
+        await fetchAll();
+      } catch (e) {
+        Swal.fire("Erro", e?.message || "Erro ao excluir lote.", "error");
+      }
+    }
   async function saveFromModal() {
     if (!modalForm.category_id) {
       Swal.fire(t("alerts.warning"), t("transactions.category"), "warning");
@@ -170,16 +270,21 @@ export default function TransactionsIndex() {
         recurrence_end_date: modalForm.recorrente ? (modalForm.fim || undefined) : undefined,
       };
 
-      await api("/api/transactions", { method: "POST", body: apiPayload });
-      Swal.fire(t("alerts.success"), t("alerts.saved"), "success");
+      if (editingId) {
+        await api(`/api/transactions/${editingId}`, { method: "PUT", body: apiPayload });
+        Swal.fire(t("alerts.success"), t("transactions.updated"), "success");
+      } else {
+        await api("/api/transactions", { method: "POST", body: apiPayload });
+        Swal.fire(t("alerts.success"), t("alerts.saved"), "success");
+      }
 
       setOpenModal(false);
       resetModal();
-      setPage(1);
+      setEditingId(null);
       await fetchAll();
     } catch (e) {
       Swal.fire(t("alerts.error"), e?.message || t("alerts.error"), "error");
-    }
+}
   }
 
   const amountClass = (row) =>
@@ -270,13 +375,14 @@ export default function TransactionsIndex() {
                 <th className="text-right p-3 font-semibold">{t("transactions.value")}</th>
                 <th className="text-left p-3 font-semibold">{t("transactions.parcel")}</th>
                 <th className="text-left p-3 font-semibold">{t("transactions.recurring")}</th>
+                <th className="text-center p-3 font-semibold">{t("transactions.actions")}</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan="7" className="p-6 text-center">{t("transactions.loading")}</td></tr>
+                <tr><td colSpan="8" className="p-6 text-center">{t("transactions.loading")}</td></tr>
               ) : list.length === 0 ? (
-                <tr><td colSpan="7" className="p-6 text-center">{t("transactions.no_records")}</td></tr>
+                <tr><td colSpan="8" className="p-6 text-center">{t("transactions.no_records")}</td></tr>
               ) : (
                 list.map((row) => (
                   <tr key={row.id} className="border-t border-slate-100 dark:border-gray-700">
@@ -290,6 +396,33 @@ export default function TransactionsIndex() {
                     </td>
                     <td className="p-3">{row.is_installment ? `${row.installment_number}/${row.installments}` : "-"}</td>
                     <td className="p-3">{row.is_recurring ? "Sim" : "Não"}</td>
+                    <td className="p-3 text-center flex justify-center gap-3">
+                              <button
+                                onClick={() => startEdit(row)}
+                                className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 transition"
+                                title={t("buttons.edit")}
+                              >
+                                ✏️
+                              </button>
+
+                              {row.batch_id ? (
+                                <button
+                                  onClick={() => removeBatch(row.id)}
+                                  className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 transition"
+                                  title={t("buttons.delete_batch")}
+                                >
+                                  🗑️
+                                </button>
+                              ) : (
+                                <button
+                                  onClick={() => remove(row.id)}
+                                  className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 transition"
+                                  title={t("buttons.delete")}
+                                >
+                                  🗑️
+                                </button>
+                              )}
+                            </td>
                   </tr>
                 ))
               )}
@@ -299,8 +432,12 @@ export default function TransactionsIndex() {
       </div>
       <Modal
         open={openModal}
-        onClose={() => setOpenModal(false)}
-        title={t("transactions.new")}
+        onClose={() =>{
+          setOpenModal(false);
+          setEditingId(null);
+          resetModal();
+        }}
+        title={editingId ? t("transactions.edit") : t("transactions.new")}
       >
         <div className="space-y-3 text-slate-800 dark:text-gray-100">
           <div>
@@ -460,10 +597,14 @@ export default function TransactionsIndex() {
               onClick={saveFromModal}
               className="px-4 py-2 rounded-lg bg-violet-700 hover:bg-violet-800 text-white"
             >
-              {t("transactions.confirm")}
+              {editingId ? t("transactions.updated") : t("transactions.confirm")}
             </button>
             <button
-              onClick={() => setOpenModal(false)}
+              onClick={() => {
+                setOpenModal(false);
+                setEditingId(null);
+                resetModal();
+              }}
               className="px-4 py-2 rounded-lg bg-slate-200 dark:bg-gray-700 dark:text-gray-200 text-slate-800 hover:bg-slate-300 dark:hover:bg-gray-600"
             >
               {t("transactions.cancel")}

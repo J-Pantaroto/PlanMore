@@ -3,9 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\Transaction;
+use App\Models\AutomationRule;
+use App\Models\Goal;
+use App\Models\GoalAllocation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
+use Illuminate\Support\Arr;
 use Carbon\Carbon;
 
 class TransactionController extends Controller
@@ -17,7 +21,7 @@ class TransactionController extends Controller
             ->orderBy('id', 'desc');
 
         if ($type = $request->query('type')) {
-            $query->where('type', $type); // 'entrada' | 'saida'
+            $query->where('type', $type);
         }
         if ($categoryId = $request->query('category_id')) {
             $query->where('category_id', $categoryId);
@@ -25,40 +29,38 @@ class TransactionController extends Controller
         if ($groupId = $request->query('group_id')) {
             $query->where('group_id', $groupId);
         }
-        if ($month = $request->query('month')) { // 'YYYY-MM'
+        if ($month = $request->query('month')) {
             try {
-                [$y,$m] = explode('-', $month);
+                [$y, $m] = explode('-', $month);
                 $start = Carbon::createFromDate((int)$y, (int)$m, 1)->startOfMonth();
                 $end = (clone $start)->endOfMonth();
                 $query->whereBetween('date', [$start->toDateString(), $end->toDateString()]);
             } catch (\Throwable $e) {}
         }
         if ($search = $request->query('search')) {
-            $query->where(function($q) use ($search){
-                $q->where('description', 'like', "%{$search}%");
-            });
+            $query->where('description', 'like', "%{$search}%");
         }
 
-        $perPage = (int)($request->query('per_page') ?? 20);
-        return response()->json($query->paginate($perPage));
+        return response()->json($query->paginate((int)($request->query('per_page') ?? 20)));
     }
 
     public function store(Request $request)
     {
         $user = $request->user();
+
         $data = $request->validate([
             'type' => 'required|in:entrada,saida',
             'amount' => 'required|numeric|min:0.01',
-            'category_id' => 'required', 'exists:categorias,id',
+            'category_id' => 'required|exists:categories,id',
+            'group_id' => 'nullable|exists:groups,id',
             'description' => 'nullable|string|max:1000',
-            'group_id' => 'nullable', 'exists:grupos, id',
+            'date' => 'required|date',
             'is_fixed' => 'boolean',
             'is_installment' => 'boolean',
             'installments' => 'nullable|integer|min:1|max:120',
             'is_recurring' => 'boolean',
             'recurrence_interval' => 'nullable|in:daily,weekly,monthly,yearly',
             'recurrence_end_date' => 'nullable|date|after_or_equal:date',
-            'date' => 'required|date',
         ]);
 
         $data['user_id'] = Auth::id();
@@ -78,7 +80,10 @@ class TransactionController extends Controller
                 $row['installment_number'] = $i;
                 $row['batch_id'] = $batchId;
                 $row['date'] = $baseDate->copy()->addMonths($i - 1)->toDateString();
-                $created[] = Transaction::create($row);
+
+                $tx = Transaction::create($row);
+                $this->applyAutomationRules($tx, $user);
+                $created[] = $tx;
             }
 
             return response()->json(['message' => 'Transações (parcelas) criadas!', 'items' => $created], 201);
@@ -93,13 +98,16 @@ class TransactionController extends Controller
                 $row = $data;
                 $row['batch_id'] = $batchId;
                 $row['date'] = $cursor->toDateString();
-                $created[] = Transaction::create($row);
+
+                $tx = Transaction::create($row);
+                $this->applyAutomationRules($tx, $user);
+                $created[] = $tx;
 
                 switch ($data['recurrence_interval']) {
-                    case 'daily':   $cursor->addDay();   break;
-                    case 'weekly':  $cursor->addWeek();  break;
+                    case 'daily':   $cursor->addDay(); break;
+                    case 'weekly':  $cursor->addWeek(); break;
                     case 'monthly': $cursor->addMonth(); break;
-                    case 'yearly':  $cursor->addYear();  break;
+                    case 'yearly':  $cursor->addYear(); break;
                 }
             }
 
@@ -107,51 +115,71 @@ class TransactionController extends Controller
         }
 
         $createdOne = Transaction::create($data);
-        $rules = AutomationRule::where('user_id', Auth::id())
-            ->where('is_active', true)
-            ->get();
-        foreach ($created as $tx) {
-            foreach ($rules as $rule) {
-                $actions = json_decode($rule->actions, true);
-
-                if (!empty($rule->match_text) && stripos($tx->description ?? '', $rule->match_text) === false) {
-                    continue;
-                }
-
-                if (!empty($actions['set_category'])) {
-                    $tx->category_id = $actions['set_category'];
-                }
-                if (!empty($actions['set_group'])) {
-                    $tx->group_id = $actions['set_group'];
-                }
-                if (!empty($actions['mark_recurring'])) {
-                    $tx->is_recurring = true;
-                    $tx->recurrence_interval = $actions['mark_recurring'];
-                }
-
-                if (!empty($actions['goal_id'])) {
-                    $percent = $actions['goal_percent'] ?? null;
-                    $fixed = $actions['goal_fixed'] ?? null;
-
-                    $amount = $percent
-                        ? $tx->amount * ($percent / 100)
-                        : ($fixed ?? 0);
-
-                    if ($amount > 0) {
-                        GoalAllocation::create([
-                            'goal_id' => $actions['goal_id'],
-                            'transaction_id' => $tx->id,
-                            'amount' => $amount,
-                            'rule_name' => $rule->name,
-                        ]);
-                    }
-                }
-
-                $tx->save();
-            }
-        }
+        $this->applyAutomationRules($createdOne, $user);
 
         return response()->json(['message' => 'Transação criada!', 'transaction' => $createdOne], 201);
+    }
+
+
+    private function applyAutomationRules($transaction, $user)
+    {
+        $rules = AutomationRule::where('user_id', $user->id)
+            ->where('is_active', true)
+            ->get();
+
+        foreach ($rules as $rule) {
+            $actions = $rule->actions ? json_decode($rule->actions, true) : [];
+            $description = strtolower($transaction->description ?? '');
+            $match = strtolower($rule->match_text ?? '');
+
+            if ($match && !Str::contains($description, $match)) {
+                continue;
+            }
+
+            if ($rule->rule_type === 'classification') {
+                if (!empty($actions['type'])) {
+                    $transaction->type = $actions['type'];
+                }
+                if (!empty($actions['set_category'])) {
+                    $transaction->category_id = $actions['set_category'];
+                }
+                if (!empty($actions['set_group'])) {
+                    $transaction->group_id = $actions['set_group'];
+                }
+            }
+
+            if ($rule->rule_type === 'goal') {
+                if (!empty($actions['goal_id'])) {
+                    $goal = Goal::find($actions['goal_id']);
+                    if ($goal) {
+                        $amountToAdd = 0;
+                        if (!empty($actions['goal_percent'])) {
+                            $amountToAdd = $transaction->amount * ($actions['goal_percent'] / 100);
+                        } elseif (!empty($actions['goal_fixed'])) {
+                            $amountToAdd = $actions['goal_fixed'];
+                        }
+
+                        if ($amountToAdd > 0) {
+                            GoalAllocation::create([
+                                'goal_id' => $goal->id,
+                                'transaction_id' => $transaction->id,
+                                'amount' => $amountToAdd,
+                                'rule_name' => $rule->name,
+                            ]);
+
+                            $goal->progress = ($goal->progress ?? 0) + $amountToAdd;
+                            $goal->save();
+                        }
+                    }
+                }
+            }
+
+            $transaction->save();
+        }
+
+        \Log::info("Regras aplicadas à transação {$transaction->id}", [
+            'description' => $transaction->description,
+        ]);
     }
 
     public function update(Request $request, Transaction $transaction)
@@ -184,9 +212,7 @@ class TransactionController extends Controller
     {
         abort_unless($transaction->user_id === Auth::id(), 403);
 
-        $deleteBatch = $request->boolean('delete_batch', false);
-
-        if ($deleteBatch && $transaction->batch_id) {
+        if ($request->boolean('delete_batch') && $transaction->batch_id) {
             Transaction::where('user_id', Auth::id())
                 ->where('batch_id', $transaction->batch_id)
                 ->delete();

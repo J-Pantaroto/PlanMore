@@ -12,6 +12,7 @@ class AutomationRule extends Model
     protected $fillable = [
         'user_id',
         'name',
+        'rule_type',
         'match_text',
         'actions',
         'is_active',

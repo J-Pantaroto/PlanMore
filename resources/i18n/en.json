@@ -46,6 +46,7 @@
     "note": "Note",
     "confirm": "Confirm",
     "cancel": "Cancel",
+    "updated": "Confirm edit",
     "search_description": "Search description...",
     "filters": {
       "type_all": "Type (all)",

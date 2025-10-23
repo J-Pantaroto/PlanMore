@@ -52,4 +52,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/export/pdf', [ExportController::class, 'exportPDF']);
     Route::get('/user/preferences', [UserPreferenceController::class, 'show']);
     Route::put('/user/preferences', [UserPreferenceController::class, 'update']);
+
+    //AUTOMATION
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::get('/automation-rules', [AutomationRuleController::class, 'index']);
+        Route::post('/automation-rules', [AutomationRuleController::class, 'store']);
+        Route::put('/automation-rules/{automationRule}', [AutomationRuleController::class, 'update']);
+        Route::delete('/automation-rules/{automationRule}', [AutomationRuleController::class, 'destroy']);
+    });
 });
