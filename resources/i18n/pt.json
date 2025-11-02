@@ -20,7 +20,12 @@
     "categories": "Categorias",
     "summary": "Resumo de Receitas e Despesas",
     "export_pdf": "Exportar PDF",
-    "export_excel": "Exportar Excel"
+    "export_excel": "Exportar Excel",
+    "opening_balance": "Saldo inicial do período",
+    "period_balance": "Saldo do período",
+    "burn_rate": "Burn rate (por dia)",
+    "runway_days": "Runway (dias)",
+    "installments": "Parcelas (no período)"
   },
   "transactions": {
     "manage": "Gerenciar Transações",
@@ -46,6 +51,7 @@
     "note": "Observação",
     "confirm": "Confirmar",
     "cancel": "Cancelar",
+    "edit": "Editar",
     "updated": "Confirmar edição",
     "search_description": "Buscar descrição...",
     "filters": {
@@ -125,14 +131,40 @@
     "optional": "Opcional"
   },
   "months": {
-  "january": "Janeiro",
-  "february": "Fevereiro",
-  "march": "Março",
-  "april": "Abril",
-  "may": "Maio"
+    "january": "Janeiro",
+    "february": "Fevereiro",
+    "march": "Março",
+    "april": "Abril",
+    "may": "Maio",
+    "june": "Junho",
+    "july": "Julho",
+    "august": "Agosto",
+    "september": "Setembro",
+    "october": "Outubro",
+    "november": "Novembro",
+    "december": "Dezembro"
   },
   "languages": {
-  "en": "Inglês",
-  "pt": "Português"
+    "en": "Inglês",
+    "pt": "Português"
+  },
+  "common": {
+    "from": "De",
+    "to": "Até",
+    "all": "Todos",
+    "count": "itens",
+    "loading": "Carregando...",
+    "error": "Erro"
+  },
+  "presets": {
+    "this_month": "Este mês",
+    "last_30_days": "Últimos 30 dias",
+    "this_week": "Esta semana",
+    "ytd": "Ano (YTD)"
+  },
+  "help": {
+    "more_info": "Mais informações",
+    "burn_rate": "Velocidade média de gasto diário no período filtrado: total de saídas dividido pelo número de dias.",
+    "runway": "Quantos dias você consegue operar mantendo o burn atual, com base no saldo atual (runway = saldo atual ÷ burn/dia)."
   }
 }

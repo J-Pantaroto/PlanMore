@@ -20,7 +20,12 @@
     "categories": "Categories",
     "summary": "Income and Expense Summary",
     "export_pdf": "Export PDF",
-    "export_excel": "Export Excel"
+    "export_excel": "Export Excel",
+    "opening_balance": "Opening balance for period",
+    "period_balance": "Period balance",
+    "burn_rate": "Burn rate (per day)",
+    "runway_days": "Runway (days)",
+    "installments": "Installments (in period)"
   },
   "transactions": {
     "manage": "Manage Transactions",
@@ -46,6 +51,7 @@
     "note": "Note",
     "confirm": "Confirm",
     "cancel": "Cancel",
+    "edit": "Edit",
     "updated": "Confirm edit",
     "search_description": "Search description...",
     "filters": {
@@ -125,14 +131,40 @@
     "optional": "Optional"
   },
   "months": {
-  "january": "January",
-  "february": "February",
-  "march": "March",
-  "april": "April",
-  "may": "May"
-},
+    "january": "January",
+    "february": "February",
+    "march": "March",
+    "april": "April",
+    "may": "May",
+    "june": "June",
+    "july": "July",
+    "august": "August",
+    "september": "September",
+    "october": "October",
+    "november": "November",
+    "december": "December"
+  },
   "languages": {
-  "en": "English",
-  "pt": "Portuguese"
+    "en": "English",
+    "pt": "Portuguese"
+  },
+  "common": {
+    "from": "From",
+    "to": "To",
+    "all": "All",
+    "count": "items",
+    "loading": "Loading...",
+    "error": "Error"
+  },
+  "presets": {
+    "this_month": "This month",
+    "last_30_days": "Last 30 days",
+    "this_week": "This week",
+    "ytd": "Year to date (YTD)"
+  },
+  "help": {
+    "more_info": "More info",
+    "burn_rate": "Average daily spending over the selected period: total expenses divided by the number of days.",
+    "runway": "How many days you can operate at the current burn, given the current balance (runway = current balance ÷ burn/day)."
   }
 }

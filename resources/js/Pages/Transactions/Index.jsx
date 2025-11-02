@@ -82,7 +82,7 @@ export default function TransactionsIndex() {
   const [openModal, setOpenModal] = useState(false);
 
   const [modalForm, setModalForm] = useState({
-    tipo: "Despesa",
+    tipo: "saida",
     category_id: "",
     group_id: "",
     valor: "",
@@ -97,7 +97,7 @@ export default function TransactionsIndex() {
 
   const resetModal = useCallback(() => {
     setModalForm({
-      tipo: "Despesa",
+      tipo: "saida",
       category_id: "",
       group_id: "",
       valor: "",
@@ -177,7 +177,7 @@ export default function TransactionsIndex() {
     function startEdit(row) {
       setEditingId(row.id);
       setEditForm({
-        tipo: row.type === "entrada" ? "Receita" : "Despesa",
+        tipo: row.type,
         category_id: row.category_id || "",
         group_id: row.group_id || "",
         valor: row.amount,
@@ -190,7 +190,7 @@ export default function TransactionsIndex() {
         parcelas: row.installments || 1,
       });
       setModalForm({
-        tipo: row.type === "entrada" ? "Receita" : "Despesa",
+        tipo: row.type,
         category_id: row.category_id || "",
         group_id: row.group_id || "",
         valor: row.amount,
@@ -257,7 +257,7 @@ export default function TransactionsIndex() {
 
     try {
       const apiPayload = {
-        type: modalForm.tipo === "Receita" ? "entrada" : "saida",
+        type: modalForm.tipo,
         amount: Number(String(modalForm.valor).replace(",", ".")),
         category_id: modalForm.category_id || null,
         group_id: modalForm.group_id || null,
@@ -447,8 +447,8 @@ export default function TransactionsIndex() {
               value={modalForm.tipo}
               onChange={(e) => setModalForm({ ...modalForm, tipo: e.target.value })}
             >
-              <option>{t("transactions.income")}</option>
-              <option>{t("transactions.expense")}</option>
+              <option value="entrada">{t("transactions.income")}</option>
+              <option value="saida">{t("transactions.expense")}</option>
             </select>
           </div>
           <div>
