@@ -105,7 +105,10 @@
     "name": "Name",
     "email": "Email",
     "password": "Password",
-    "confirm_password": "Confirm password"
+    "confirm_password": "Confirm password",
+    "current_password": "Current Password",
+    "new_password": "New Password",
+    "social_login": "You are logged in via {{provider}}. Changing your password is not available."
   },
   "alerts": {
     "success": "Success",

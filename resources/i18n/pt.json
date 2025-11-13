@@ -105,7 +105,10 @@
     "name": "Nome",
     "email": "E-mail",
     "password": "Senha",
-    "confirm_password": "Confirmar senha"
+    "confirm_password": "Confirmar senha",
+    "current_password": "Senha atual",
+    "new_password": "Nova senha",
+    "social_login": "Você está logado via {{provider}}. Alterar senha não está disponível."
   },
   "alerts": {
     "success": "Sucesso",
