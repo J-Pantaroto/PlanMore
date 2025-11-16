@@ -190,10 +190,13 @@ export default function EditProfile() {
             type="email"
             id="email"
             name="email"
+            disabled
             value={profile.email}
             onChange={handleChange}
             className="mt-1 block w-full p-2 border border-gray-300 dark:border-gray-600 
-                       rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                       rounded-md bg-gray-200 dark:bg-gray-700 
+                       text-gray-500 dark:text-gray-400 
+                       opacity-60 cursor-not-allowed"
           />
           {errors.email && (
             <div className="text-red-500 text-sm">{errors.email}</div>
@@ -307,10 +310,9 @@ export default function EditProfile() {
           </form>
         </>
       ) : (
-        <p className="mt-6 text-gray-600 dark:text-gray-400">
-          {t("account.social_login") ||
-            `Você está logado via ${profile.provider_name}. Alterar senha não está disponível.`}
-        </p>
+          <p className="mt-6 text-gray-600 dark:text-gray-400">
+            {t("account.social_login", { provider: profile.provider_name })}
+          </p>
       )}
     </Shell>
   );
