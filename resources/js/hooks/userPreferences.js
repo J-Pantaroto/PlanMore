@@ -22,7 +22,7 @@ export default function usePreferences() {
   const applyTheme = (theme) => {
     const root = document.documentElement;
     const body = document.body;
-
+    localStorage.setItem("theme", theme);
     if (theme === "dark") {
       root.classList.add("dark");
       body.classList.add("dark");

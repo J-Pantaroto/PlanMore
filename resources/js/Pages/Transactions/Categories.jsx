@@ -4,6 +4,17 @@ import { api } from "../../bootstrap";
 import { useTranslation } from "react-i18next";
 import Swal from "sweetalert2";
 
+function getSwalTheme() {
+  const isDark = document.documentElement.classList.contains("dark");
+
+  return {
+    background: isDark ? "#020617" : "#ffffff",
+    color: isDark ? "#e5e7eb" : "#111827",
+    confirmButtonColor: "#9333ea",
+    cancelButtonColor: "#6b7280",
+  };
+}
+
 export default function Categories() {
   const { t } = useTranslation();
 
@@ -29,31 +40,64 @@ export default function Categories() {
 
   async function create() {
     if (!form.name.trim()) {
-      Swal.fire(t("alerts.warning"), t("categories.new"), "warning");
+      const { background, color, confirmButtonColor } = getSwalTheme();
+      Swal.fire({
+        icon: "warning",
+        title: t("alerts.warning"),
+        text: t("categories.new"),
+        background,
+        color,
+        confirmButtonColor,
+      });
       return;
     }
+
     await api("/api/categories", {
       method: "POST",
       body: form,
     });
     setForm({ name: "", type: "entrada" });
-    Swal.fire(t("alerts.success"), t("alerts.saved"), "success");
+
+    const { background, color, confirmButtonColor } = getSwalTheme();
+    Swal.fire({
+      icon: "success",
+      title: t("alerts.success"),
+      text: t("alerts.saved"),
+      background,
+      color,
+      confirmButtonColor,
+    });
+
     await load();
   }
 
   async function saveEdit(id) {
     if (!editData.name.trim()) return;
+
     await api(`/api/categories/${id}`, {
       method: "PUT",
       body: editData,
     });
     setEditingId(null);
     setEditData({ name: "", type: "entrada" });
-    Swal.fire(t("alerts.success"), t("alerts.updated"), "success");
+
+    const { background, color, confirmButtonColor } = getSwalTheme();
+    Swal.fire({
+      icon: "success",
+      title: t("alerts.success"),
+      text: t("alerts.updated"),
+      background,
+      color,
+      confirmButtonColor,
+    });
+
     await load();
   }
 
   async function remove(id) {
+    const { background, color, confirmButtonColor, cancelButtonColor } =
+      getSwalTheme();
+
     const result = await Swal.fire({
       title: t("alerts.confirm_delete"),
       text: t("categories.title"),
@@ -61,12 +105,26 @@ export default function Categories() {
       showCancelButton: true,
       confirmButtonText: t("buttons.confirm"),
       cancelButtonText: t("buttons.cancel"),
+      background,
+      color,
+      confirmButtonColor,
+      cancelButtonColor,
     });
 
     if (!result.isConfirmed) return;
 
     await api(`/api/categories/${id}`, { method: "DELETE" });
-    Swal.fire(t("alerts.success"), t("alerts.deleted"), "success");
+
+    const theme = getSwalTheme();
+    Swal.fire({
+      icon: "success",
+      title: t("alerts.success"),
+      text: t("alerts.deleted"),
+      background: theme.background,
+      color: theme.color,
+      confirmButtonColor: theme.confirmButtonColor,
+    });
+
     await load();
   }
 
@@ -119,9 +177,15 @@ export default function Categories() {
           <table className="min-w-full text-sm bg-white dark:bg-gray-800 text-slate-900 dark:text-gray-100 transition-colors duration-300">
             <thead>
               <tr className="bg-slate-50 dark:bg-gray-700 text-slate-700 dark:text-gray-200">
-                <th className="text-left p-3 font-semibold">{t("account.name")}</th>
-                <th className="text-left p-3 font-semibold">{t("categories.type")}</th>
-                <th className="text-right p-3 font-semibold">{t("transactions.actions")}</th>
+                <th className="text-left p-3 font-semibold">
+                  {t("account.name")}
+                </th>
+                <th className="text-left p-3 font-semibold">
+                  {t("categories.type")}
+                </th>
+                <th className="text-right p-3 font-semibold">
+                  {t("transactions.actions")}
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -167,11 +231,19 @@ export default function Categories() {
                           className="border border-slate-300 dark:border-gray-600 bg-white dark:bg-gray-700 
                                      text-slate-900 dark:text-gray-100 rounded p-1 transition-colors duration-300"
                         >
-                          <option value="entrada">{t("transactions.income")}</option>
-                          <option value="saida">{t("transactions.expense")}</option>
+                          <option value="entrada">
+                            {t("transactions.income")}
+                          </option>
+                          <option value="saida">
+                            {t("transactions.expense")}
+                          </option>
                         </select>
                       ) : (
-                        t(`transactions.${c.type === "entrada" ? "income" : "expense"}`)
+                        t(
+                          `transactions.${
+                            c.type === "entrada" ? "income" : "expense"
+                          }`
+                        )
                       )}
                     </td>
                     <td className="p-3 text-right">

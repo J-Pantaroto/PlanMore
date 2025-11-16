@@ -50,6 +50,17 @@ function Modal({ open, onClose, title, children }) {
   );
 }
 
+function getSwalTheme() {
+  const isDark = document.documentElement.classList.contains("dark");
+
+  return {
+    background: isDark ? "#020617" : "#ffffff",
+    color: isDark ? "#e5e7eb" : "#111827",
+    confirmButtonColor: "#9333ea",
+    cancelButtonColor: "#6b7280",
+  };
+}
+
 export default function TransactionsIndex() {
   const { t } = useTranslation();
 
@@ -148,110 +159,192 @@ export default function TransactionsIndex() {
   );
 
   async function saveEdit(id) {
-      try {
-        const payload = { ...editForm };
-        if (!payload.is_installment) {
-          delete payload.installments;
-          delete payload.installment_number;
-        }
-        if (!payload.is_recurring) {
-          delete payload.recurrence_interval;
-          delete payload.recurrence_end_date;
-        }
-        await api(`/api/transactions/${id}`, { method: "PUT", body: payload });
-
-        Swal.fire("Atualizado", "Transação editada com sucesso!", "success");
-
-        setEditingId(null);
-        await fetchAll();
-      } catch (e) {
-        Swal.fire("Erro", e?.message || "Erro ao atualizar.", "error");
+    try {
+      const payload = { ...editForm };
+      if (!payload.is_installment) {
+        delete payload.installments;
+        delete payload.installment_number;
       }
-    }
+      if (!payload.is_recurring) {
+        delete payload.recurrence_interval;
+        delete payload.recurrence_end_date;
+      }
+      await api(`/api/transactions/${id}`, { method: "PUT", body: payload });
 
-    async function cancelEdit() {
+      const { background, color, confirmButtonColor } = getSwalTheme();
+      Swal.fire({
+        icon: "success",
+        title: "Atualizado",
+        text: "Transação editada com sucesso!",
+        background,
+        color,
+        confirmButtonColor,
+      });
+
       setEditingId(null);
-      setEditForm({});
-    }
-
-    function startEdit(row) {
-      setEditingId(row.id);
-      setEditForm({
-        tipo: row.type,
-        category_id: row.category_id || "",
-        group_id: row.group_id || "",
-        valor: row.amount,
-        datetime: row.date + "T00:00",
-        observacao: row.description || "",
-        recorrente: row.is_recurring,
-        intervalo: row.recurrence_interval || "monthly",
-        fim: row.recurrence_end_date || "",
-        parcelado: row.is_installment,
-        parcelas: row.installments || 1,
+      await fetchAll();
+    } catch (e) {
+      const { background, color, confirmButtonColor } = getSwalTheme();
+      Swal.fire({
+        icon: "error",
+        title: "Erro",
+        text: e?.message || "Erro ao atualizar.",
+        background,
+        color,
+        confirmButtonColor,
       });
-      setModalForm({
-        tipo: row.type,
-        category_id: row.category_id || "",
-        group_id: row.group_id || "",
-        valor: row.amount,
-        datetime: row.date + "T00:00",
-        observacao: row.description || "",
-        recorrente: row.is_recurring,
-        intervalo: row.recurrence_interval || "monthly",
-        fim: row.recurrence_end_date || "",
-        parcelado: row.is_installment,
-        parcelas: row.installments || 1,
-      });
-      setOpenModal(true);
     }
-    async function remove(id) {
-      const confirm = await Swal.fire({
-        title: "Excluir transação?",
-        text: "Essa ação não pode ser desfeita.",
-        icon: "warning",
-        showCancelButton: true,
-        confirmButtonText: "Sim, excluir",
-        cancelButtonText: "Cancelar",
+  }
+
+  async function cancelEdit() {
+    setEditingId(null);
+    setEditForm({});
+  }
+
+  function startEdit(row) {
+    setEditingId(row.id);
+    setEditForm({
+      tipo: row.type,
+      category_id: row.category_id || "",
+      group_id: row.group_id || "",
+      valor: row.amount,
+      datetime: row.date + "T00:00",
+      observacao: row.description || "",
+      recorrente: row.is_recurring,
+      intervalo: row.recurrence_interval || "monthly",
+      fim: row.recurrence_end_date || "",
+      parcelado: row.is_installment,
+      parcelas: row.installments || 1,
+    });
+    setModalForm({
+      tipo: row.type,
+      category_id: row.category_id || "",
+      group_id: row.group_id || "",
+      valor: row.amount,
+      datetime: row.date + "T00:00",
+      observacao: row.description || "",
+      recorrente: row.is_recurring,
+      intervalo: row.recurrence_interval || "monthly",
+      fim: row.recurrence_end_date || "",
+      parcelado: row.is_installment,
+      parcelas: row.installments || 1,
+    });
+    setOpenModal(true);
+  }
+
+  async function remove(id) {
+    const { background, color, confirmButtonColor, cancelButtonColor } = getSwalTheme();
+
+    const confirm = await Swal.fire({
+      title: "Excluir transação?",
+      text: "Essa ação não pode ser desfeita.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Sim, excluir",
+      cancelButtonText: "Cancelar",
+      background,
+      color,
+      confirmButtonColor,
+      cancelButtonColor,
+    });
+
+    if (!confirm.isConfirmed) return;
+
+    try {
+      await api(`/api/transactions/${id}`, { method: "DELETE" });
+
+      const theme = getSwalTheme();
+      Swal.fire({
+        icon: "success",
+        title: "Excluída",
+        text: "Transação removida com sucesso!",
+        background: theme.background,
+        color: theme.color,
+        confirmButtonColor: theme.confirmButtonColor,
       });
 
-      if (!confirm.isConfirmed) return;
-
-      try {
-        await api(`/api/transactions/${id}`, { method: "DELETE" });
-        Swal.fire("Excluída", "Transação removida com sucesso!", "success");
-        await fetchAll();
-      } catch (e) {
-        Swal.fire("Erro", e?.message || "Erro ao excluir.", "error");
-      }
+      await fetchAll();
+    } catch (e) {
+      const { background, color, confirmButtonColor } = getSwalTheme();
+      Swal.fire({
+        icon: "error",
+        title: "Erro",
+        text: e?.message || "Erro ao excluir.",
+        background,
+        color,
+        confirmButtonColor,
+      });
     }
+  }
 
-    async function removeBatch(id) {
-      const confirm = await Swal.fire({
-        title: "Excluir lote inteiro?",
-        text: "Isso vai apagar todas as parcelas/ocorrências ligadas.",
-        icon: "warning",
-        showCancelButton: true,
-        confirmButtonText: "Sim, excluir tudo",
-        cancelButtonText: "Cancelar",
+  async function removeBatch(id) {
+    const { background, color, confirmButtonColor, cancelButtonColor } = getSwalTheme();
+
+    const confirm = await Swal.fire({
+      title: "Excluir lote inteiro?",
+      text: "Isso vai apagar todas as parcelas/ocorrências ligadas.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Sim, excluir tudo",
+      cancelButtonText: "Cancelar",
+      background,
+      color,
+      confirmButtonColor,
+      cancelButtonColor,
+    });
+
+    if (!confirm.isConfirmed) return;
+
+    try {
+      await api(`/api/transactions/${id}?delete_batch=1`, { method: "DELETE" });
+
+      const theme = getSwalTheme();
+      Swal.fire({
+        icon: "success",
+        title: "Excluído",
+        text: "Lote removido com sucesso!",
+        background: theme.background,
+        color: theme.color,
+        confirmButtonColor: theme.confirmButtonColor,
       });
 
-      if (!confirm.isConfirmed) return;
-
-      try {
-        await api(`/api/transactions/${id}?delete_batch=1`, { method: "DELETE" });
-        Swal.fire("Excluído", "Lote removido com sucesso!", "success");
-        await fetchAll();
-      } catch (e) {
-        Swal.fire("Erro", e?.message || "Erro ao excluir lote.", "error");
-      }
+      await fetchAll();
+    } catch (e) {
+      const { background, color, confirmButtonColor } = getSwalTheme();
+      Swal.fire({
+        icon: "error",
+        title: "Erro",
+        text: e?.message || "Erro ao excluir lote.",
+        background,
+        color,
+        confirmButtonColor,
+      });
     }
+  }
+
   async function saveFromModal() {
     if (!modalForm.category_id) {
-      Swal.fire(t("alerts.warning"), t("transactions.category"), "warning");
+      const { background, color, confirmButtonColor } = getSwalTheme();
+      Swal.fire({
+        icon: "warning",
+        title: t("alerts.warning"),
+        text: t("transactions.category"),
+        background,
+        color,
+        confirmButtonColor,
+      });
       return;
     }
     if (!modalForm.valor || Number(modalForm.valor) <= 0) {
-      Swal.fire(t("alerts.warning"), t("transactions.value"), "warning");
+      const { background, color, confirmButtonColor } = getSwalTheme();
+      Swal.fire({
+        icon: "warning",
+        title: t("alerts.warning"),
+        text: t("transactions.value"),
+        background,
+        color,
+        confirmButtonColor,
+      });
       return;
     }
 
@@ -272,10 +365,28 @@ export default function TransactionsIndex() {
 
       if (editingId) {
         await api(`/api/transactions/${editingId}`, { method: "PUT", body: apiPayload });
-        Swal.fire(t("alerts.success"), t("transactions.updated"), "success");
+
+        const { background, color, confirmButtonColor } = getSwalTheme();
+        Swal.fire({
+          icon: "success",
+          title: t("alerts.success"),
+          text: t("transactions.updated"),
+          background,
+          color,
+          confirmButtonColor,
+        });
       } else {
         await api("/api/transactions", { method: "POST", body: apiPayload });
-        Swal.fire(t("alerts.success"), t("alerts.saved"), "success");
+
+        const { background, color, confirmButtonColor } = getSwalTheme();
+        Swal.fire({
+          icon: "success",
+          title: t("alerts.success"),
+          text: t("alerts.saved"),
+          background,
+          color,
+          confirmButtonColor,
+        });
       }
 
       setOpenModal(false);
@@ -283,8 +394,16 @@ export default function TransactionsIndex() {
       setEditingId(null);
       await fetchAll();
     } catch (e) {
-      Swal.fire(t("alerts.error"), e?.message || t("alerts.error"), "error");
-}
+      const { background, color, confirmButtonColor } = getSwalTheme();
+      Swal.fire({
+        icon: "error",
+        title: t("alerts.error"),
+        text: e?.message || t("alerts.error"),
+        background,
+        color,
+        confirmButtonColor,
+      });
+    }
   }
 
   const amountClass = (row) =>
@@ -327,7 +446,9 @@ export default function TransactionsIndex() {
         >
           <option value="">{t("transactions.category")}</option>
           {categories.map((c) => (
-            <option key={c.id} value={c.id}>{c.name}</option>
+            <option key={c.id} value={c.id}>
+              {c.name}
+            </option>
           ))}
         </select>
 
@@ -338,7 +459,9 @@ export default function TransactionsIndex() {
         >
           <option value="">{t("transactions.group")}</option>
           {groups.map((g) => (
-            <option key={g.id} value={g.id}>{g.name}</option>
+            <option key={g.id} value={g.id}>
+              {g.name}
+            </option>
           ))}
         </select>
 
@@ -369,60 +492,93 @@ export default function TransactionsIndex() {
             <thead>
               <tr className="bg-slate-50 dark:bg-gray-700 text-slate-700 dark:text-gray-200">
                 <th className="text-left p-3 font-semibold">{t("transactions.date")}</th>
-                <th className="text-left p-3 font-semibold">{t("transactions.description")}</th>
-                <th className="text-left p-3 font-semibold">{t("transactions.category")}</th>
-                <th className="text-left p-3 font-semibold">{t("transactions.group")}</th>
-                <th className="text-right p-3 font-semibold">{t("transactions.value")}</th>
-                <th className="text-left p-3 font-semibold">{t("transactions.parcel")}</th>
-                <th className="text-left p-3 font-semibold">{t("transactions.recurring")}</th>
-                <th className="text-center p-3 font-semibold">{t("transactions.actions")}</th>
+                <th className="text-left p-3 font-semibold">
+                  {t("transactions.description")}
+                </th>
+                <th className="text-left p-3 font-semibold">
+                  {t("transactions.category")}
+                </th>
+                <th className="text-left p-3 font-semibold">
+                  {t("transactions.group")}
+                </th>
+                <th className="text-right p-3 font-semibold">
+                  {t("transactions.value")}
+                </th>
+                <th className="text-left p-3 font-semibold">
+                  {t("transactions.parcel")}
+                </th>
+                <th className="text-left p-3 font-semibold">
+                  {t("transactions.recurring")}
+                </th>
+                <th className="text-center p-3 font-semibold">
+                  {t("transactions.actions")}
+                </th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan="8" className="p-6 text-center">{t("transactions.loading")}</td></tr>
+                <tr>
+                  <td colSpan="8" className="p-6 text-center">
+                    {t("transactions.loading")}
+                  </td>
+                </tr>
               ) : list.length === 0 ? (
-                <tr><td colSpan="8" className="p-6 text-center">{t("transactions.no_records")}</td></tr>
+                <tr>
+                  <td colSpan="8" className="p-6 text-center">
+                    {t("transactions.no_records")}
+                  </td>
+                </tr>
               ) : (
                 list.map((row) => (
-                  <tr key={row.id} className="border-t border-slate-100 dark:border-gray-700">
+                  <tr
+                    key={row.id}
+                    className="border-t border-slate-100 dark:border-gray-700"
+                  >
                     <td className="p-3">{fmtDate(row.date)}</td>
                     <td className="p-3">{row.description || "-"}</td>
-                    <td className="p-3">{categories.find((c) => c.id === row.category_id)?.name || "-"}</td>
-                    <td className="p-3">{groups.find((g) => g.id === row.group_id)?.name || "-"}</td>
+                    <td className="p-3">
+                      {categories.find((c) => c.id === row.category_id)?.name || "-"}
+                    </td>
+                    <td className="p-3">
+                      {groups.find((g) => g.id === row.group_id)?.name || "-"}
+                    </td>
                     <td className={`p-3 text-right ${amountClass(row)}`}>
                       {row.type === "saida" ? "−" : ""}
                       {money(row.amount)}
                     </td>
-                    <td className="p-3">{row.is_installment ? `${row.installment_number}/${row.installments}` : "-"}</td>
+                    <td className="p-3">
+                      {row.is_installment
+                        ? `${row.installment_number}/${row.installments}`
+                        : "-"}
+                    </td>
                     <td className="p-3">{row.is_recurring ? "Sim" : "Não"}</td>
                     <td className="p-3 text-center flex justify-center gap-3">
-                              <button
-                                onClick={() => startEdit(row)}
-                                className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 transition"
-                                title={t("buttons.edit")}
-                              >
-                                ✏️
-                              </button>
+                      <button
+                        onClick={() => startEdit(row)}
+                        className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 transition"
+                        title={t("buttons.edit")}
+                      >
+                        ✏️
+                      </button>
 
-                              {row.batch_id ? (
-                                <button
-                                  onClick={() => removeBatch(row.id)}
-                                  className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 transition"
-                                  title={t("buttons.delete_batch")}
-                                >
-                                  🗑️
-                                </button>
-                              ) : (
-                                <button
-                                  onClick={() => remove(row.id)}
-                                  className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 transition"
-                                  title={t("buttons.delete")}
-                                >
-                                  🗑️
-                                </button>
-                              )}
-                            </td>
+                      {row.batch_id ? (
+                        <button
+                          onClick={() => removeBatch(row.id)}
+                          className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 transition"
+                          title={t("buttons.delete_batch")}
+                        >
+                          🗑️
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => remove(row.id)}
+                          className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 transition"
+                          title={t("buttons.delete")}
+                        >
+                          🗑️
+                        </button>
+                      )}
+                    </td>
                   </tr>
                 ))
               )}
@@ -430,9 +586,10 @@ export default function TransactionsIndex() {
           </table>
         </div>
       </div>
+
       <Modal
         open={openModal}
-        onClose={() =>{
+        onClose={() => {
           setOpenModal(false);
           setEditingId(null);
           resetModal();
@@ -441,7 +598,9 @@ export default function TransactionsIndex() {
       >
         <div className="space-y-3 text-slate-800 dark:text-gray-100">
           <div>
-            <label className="block mb-1 font-medium">{t("transactions.type")}</label>
+            <label className="block mb-1 font-medium">
+              {t("transactions.type")}
+            </label>
             <select
               className="w-full border border-slate-300 dark:border-gray-600 rounded-lg p-2 bg-white dark:bg-gray-700 text-slate-900 dark:text-gray-100"
               value={modalForm.tipo}
@@ -452,13 +611,19 @@ export default function TransactionsIndex() {
             </select>
           </div>
           <div>
-            <label className="block mb-1 font-medium">{t("transactions.category")}</label>
+            <label className="block mb-1 font-medium">
+              {t("transactions.category")}
+            </label>
             <select
               className="w-full border border-slate-300 dark:border-gray-600 rounded-lg p-2 bg-white dark:bg-gray-700 text-slate-900 dark:text-gray-100"
               value={modalForm.category_id}
-              onChange={(e) => setModalForm({ ...modalForm, category_id: e.target.value })}
+              onChange={(e) =>
+                setModalForm({ ...modalForm, category_id: e.target.value })
+              }
             >
-              <option value="">{t("transactions.category") || "Selecione"}</option>
+              <option value="">
+                {t("transactions.category") || "Selecione"}
+              </option>
               {categories.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.name}
@@ -467,13 +632,19 @@ export default function TransactionsIndex() {
             </select>
           </div>
           <div>
-            <label className="block mb-1 font-medium">{t("transactions.group")}</label>
+            <label className="block mb-1 font-medium">
+              {t("transactions.group")}
+            </label>
             <select
               className="w-full border border-slate-300 dark:border-gray-600 rounded-lg p-2 bg-white dark:bg-gray-700 text-slate-900 dark:text-gray-100"
               value={modalForm.group_id}
-              onChange={(e) => setModalForm({ ...modalForm, group_id: e.target.value })}
+              onChange={(e) =>
+                setModalForm({ ...modalForm, group_id: e.target.value })
+              }
             >
-              <option value="">{t("transactions.group")} (opcional)</option>
+              <option value="">
+                {t("transactions.group")} (opcional)
+              </option>
               {groups.map((g) => (
                 <option key={g.id} value={g.id}>
                   {g.name}
@@ -482,36 +653,48 @@ export default function TransactionsIndex() {
             </select>
           </div>
           <div>
-            <label className="block mb-1 font-medium">{t("transactions.value")}</label>
+            <label className="block mb-1 font-medium">
+              {t("transactions.value")}
+            </label>
             <input
               className="w-full border border-slate-300 dark:border-gray-600 rounded-lg p-2 bg-white dark:bg-gray-700 text-slate-900 dark:text-gray-100"
               type="number"
               step="0.01"
               placeholder="Ex: 1200.00"
               value={modalForm.valor}
-              onChange={(e) => setModalForm({ ...modalForm, valor: e.target.value })}
+              onChange={(e) =>
+                setModalForm({ ...modalForm, valor: e.target.value })
+              }
             />
           </div>
           <div>
-            <label className="block mb-1 font-medium">{t("transactions.date")}</label>
+            <label className="block mb-1 font-medium">
+              {t("transactions.date")}
+            </label>
             <input
               className="w-full border border-slate-300 dark:border-gray-600 rounded-lg p-2 bg-white dark:bg-gray-700 text-slate-900 dark:text-gray-100"
               type="datetime-local"
               value={modalForm.datetime}
-              onChange={(e) => setModalForm({ ...modalForm, datetime: e.target.value })}
+              onChange={(e) =>
+                setModalForm({ ...modalForm, datetime: e.target.value })
+              }
             />
             <p className="text-xs text-slate-500 dark:text-gray-400 mt-1">
               {t("transactions.note")} (a hora é apenas referência visual)
             </p>
           </div>
           <div>
-            <label className="block mb-1 font-medium">{t("transactions.note")}</label>
+            <label className="block mb-1 font-medium">
+              {t("transactions.note")}
+            </label>
             <textarea
               className="w-full border border-slate-300 dark:border-gray-600 rounded-lg p-2 bg-white dark:bg-gray-700 text-slate-900 dark:text-gray-100"
               rows={2}
               placeholder={t("transactions.note")}
               value={modalForm.observacao}
-              onChange={(e) => setModalForm({ ...modalForm, observacao: e.target.value })}
+              onChange={(e) =>
+                setModalForm({ ...modalForm, observacao: e.target.value })
+              }
             />
           </div>
           <div className="flex items-center gap-2">
@@ -519,7 +702,9 @@ export default function TransactionsIndex() {
               id="parcelado"
               type="checkbox"
               checked={modalForm.parcelado}
-              onChange={(e) => setModalForm({ ...modalForm, parcelado: e.target.checked })}
+              onChange={(e) =>
+                setModalForm({ ...modalForm, parcelado: e.target.checked })
+              }
             />
             <label htmlFor="parcelado" className="font-medium">
               {t("transactions.installment")}
@@ -528,14 +713,18 @@ export default function TransactionsIndex() {
 
           {modalForm.parcelado && (
             <div>
-              <label className="block mb-1 font-medium">{t("transactions.installments_number")}</label>
+              <label className="block mb-1 font-medium">
+                {t("transactions.installments_number")}
+              </label>
               <input
                 type="number"
                 min="1"
                 max="120"
                 className="w-full border border-slate-300 dark:border-gray-600 rounded-lg p-2 bg-white dark:bg-gray-700 text-slate-900 dark:text-gray-100"
                 value={modalForm.parcelas}
-                onChange={(e) => setModalForm({ ...modalForm, parcelas: e.target.value })}
+                onChange={(e) =>
+                  setModalForm({ ...modalForm, parcelas: e.target.value })
+                }
               />
             </div>
           )}
@@ -560,26 +749,42 @@ export default function TransactionsIndex() {
           {modalForm.recorrente && (
             <>
               <div>
-                <label className="block mb-1 font-medium">{t("transactions.interval")}</label>
+                <label className="block mb-1 font-medium">
+                  {t("transactions.interval")}
+                </label>
                 <select
                   className="w-full border border-slate-300 dark:border-gray-600 rounded-lg p-2 bg-white dark:bg-gray-700 text-slate-900 dark:text-gray-100"
                   value={modalForm.intervalo}
-                  onChange={(e) => setModalForm({ ...modalForm, intervalo: e.target.value })}
+                  onChange={(e) =>
+                    setModalForm({ ...modalForm, intervalo: e.target.value })
+                  }
                 >
-                  <option value="daily">{t("transactions.interval")} - Diária</option>
-                  <option value="weekly">{t("transactions.interval")} - Semanal</option>
-                  <option value="monthly">{t("transactions.interval")} - Mensal</option>
-                  <option value="yearly">{t("transactions.interval")} - Anual</option>
+                  <option value="daily">
+                    {t("transactions.interval")} - Diária
+                  </option>
+                  <option value="weekly">
+                    {t("transactions.interval")} - Semanal
+                  </option>
+                  <option value="monthly">
+                    {t("transactions.interval")} - Mensal
+                  </option>
+                  <option value="yearly">
+                    {t("transactions.interval")} - Anual
+                  </option>
                 </select>
               </div>
 
               <div>
-                <label className="block mb-1 font-medium">{t("transactions.end")}</label>
+                <label className="block mb-1 font-medium">
+                  {t("transactions.end")}
+                </label>
                 <input
                   className="w-full border border-slate-300 dark:border-gray-600 rounded-lg p-2 bg-white dark:bg-gray-700 text-slate-900 dark:text-gray-100"
                   type="date"
                   value={modalForm.fim}
-                  onChange={(e) => setModalForm({ ...modalForm, fim: e.target.value })}
+                  onChange={(e) =>
+                    setModalForm({ ...modalForm, fim: e.target.value })
+                  }
                 />
               </div>
             </>
@@ -612,7 +817,6 @@ export default function TransactionsIndex() {
           </div>
         </div>
       </Modal>
-
     </Shell>
   );
 }

@@ -4,6 +4,17 @@ import Shell from "../Layouts/Shell";
 import usePreferences from "../hooks/userPreferences";
 import { useTranslation } from "react-i18next";
 
+function getSwalTheme() {
+  const isDark = document.documentElement.classList.contains("dark");
+
+  return {
+    background: isDark ? "#020617" : "#ffffff",
+    color: isDark ? "#e5e7eb" : "#111827",
+    confirmButtonColor: "#9333ea",
+    cancelButtonColor: "#6b7280",
+  };
+}
+
 export default function Preferences() {
   const { t } = useTranslation();
   const { prefs, updatePrefs, resetPrefs, loading } = usePreferences();
@@ -19,40 +30,46 @@ export default function Preferences() {
 
   const handleUpdate = async (newPrefs) => {
     await updatePrefs(newPrefs);
+
+    const { background, color, confirmButtonColor } = getSwalTheme();
     Swal.fire({
       icon: "success",
       title: t("alerts.success"),
       text: t("alerts.saved"),
-      confirmButtonColor: "#9333ea",
-      background: "#1e1b4b",
-      color: "#fff",
+      confirmButtonColor,
+      background,
+      color,
       timer: 1500,
       showConfirmButton: false,
     });
   };
 
   const handleReset = () => {
+    const { background, color, confirmButtonColor, cancelButtonColor } = getSwalTheme();
+
     Swal.fire({
       title: t("preferences.reset"),
       text: t("alerts.confirm_delete"),
       icon: "warning",
       showCancelButton: true,
-      confirmButtonColor: "#9333ea",
-      cancelButtonColor: "#6b7280",
+      confirmButtonColor,
+      cancelButtonColor,
       confirmButtonText: t("buttons.confirm"),
       cancelButtonText: t("buttons.cancel"),
-      background: "#1e1b4b",
-      color: "#fff",
+      background,
+      color,
     }).then(async (result) => {
       if (result.isConfirmed) {
         await resetPrefs();
+
+        const { background, color, confirmButtonColor } = getSwalTheme();
         Swal.fire({
           icon: "success",
           title: t("alerts.success"),
           text: t("alerts.updated"),
-          confirmButtonColor: "#9333ea",
-          background: "#1e1b4b",
-          color: "#fff",
+          confirmButtonColor,
+          background,
+          color,
           timer: 1500,
           showConfirmButton: false,
         });
@@ -143,9 +160,7 @@ export default function Preferences() {
 
 function Switch({ label, checked, onChange }) {
   return (
-    <label
-      className="flex items-center gap-3 cursor-pointer text-gray-800 dark:text-gray-200 hover:scale-[1.02] transition-transform"
-    >
+    <label className="flex items-center gap-3 cursor-pointer text-gray-800 dark:text-gray-200 hover:scale-[1.02] transition-transform">
       <div
         onClick={onChange}
         className={`w-11 h-6 rounded-full relative transition-all duration-300 shadow-inner ${
@@ -174,9 +189,7 @@ function ThemeOption({ label, selected, onSelect }) {
       }`}
     >
       <div
-        className={`w-3 h-3 rounded-full ${
-          selected ? "bg-white" : "bg-purple-500"
-        }`}
+        className={`w-3 h-3 rounded-full ${selected ? "bg-white" : "bg-purple-500"}`}
       ></div>
       {label}
     </button>

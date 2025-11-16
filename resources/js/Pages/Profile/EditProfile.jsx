@@ -4,6 +4,16 @@ import { ensureCsrf } from "@/bootstrap";
 import Swal from "sweetalert2";
 import { useTranslation } from "react-i18next";
 
+function getSwalTheme() {
+  const isDark = document.documentElement.classList.contains("dark");
+
+  return {
+    background: isDark ? "#020617" : "#ffffff",
+    color: isDark ? "#e5e7eb" : "#111827",
+    confirmButtonColor: "#9333ea",
+  };
+}
+
 export default function EditProfile() {
   const { t } = useTranslation();
 
@@ -39,7 +49,7 @@ export default function EditProfile() {
   };
 
   const getCookie = (name) => {
-    const safeName = name.replace(/([.$?*|{}()[\]\\/+^])/g, "\\$1"); 
+    const safeName = name.replace(/([.$?*|{}()[\]\\/+^])/g, "\\$1");
     const regex = new RegExp(`(?:^|; )${safeName}=([^;]*)`);
     const match = document.cookie.match(regex);
     return match ? decodeURIComponent(match[1]) : null;
@@ -69,13 +79,14 @@ export default function EditProfile() {
         const json = await res.json();
         setErrors(json.errors || {});
       } else if (res.ok) {
+        const { background, color, confirmButtonColor } = getSwalTheme();
         Swal.fire({
           icon: "success",
           title: t("alerts.success"),
           text: t("alerts.updated"),
-          confirmButtonColor: "#9333ea",
-          background: "#1e1b4b",
-          color: "#fff",
+          confirmButtonColor,
+          background,
+          color,
           timer: 1500,
           showConfirmButton: false,
         });
@@ -113,16 +124,18 @@ export default function EditProfile() {
         const json = await res.json();
         setErrors(json.errors || {});
       } else if (res.ok) {
+        const { background, color, confirmButtonColor } = getSwalTheme();
         Swal.fire({
           icon: "success",
           title: t("alerts.success"),
           text: t("alerts.updated"),
-          confirmButtonColor: "#9333ea",
-          background: "#1e1b4b",
-          color: "#fff",
+          confirmButtonColor,
+          background,
+          color,
           timer: 1500,
           showConfirmButton: false,
         });
+
         setPasswordData({
           current_password: "",
           password: "",

@@ -33,6 +33,17 @@ function Modal({ open, onClose, title, children }) {
   );
 }
 
+function getSwalTheme() {
+  const isDark = document.documentElement.classList.contains("dark");
+
+  return {
+    background: isDark ? "#020617" : "#ffffff",
+    color: isDark ? "#e5e7eb" : "#111827",
+    confirmButtonColor: "#9333ea",
+    cancelButtonColor: "#6b7280",
+  };
+}
+
 export default function Automation() {
   const { t } = useTranslation();
 
@@ -115,7 +126,15 @@ export default function Automation() {
 
   const saveRule = async () => {
     if (!form.name.trim()) {
-      Swal.fire(t("alerts.warning"), "Insira um nome para a regra", "warning");
+      const { background, color, confirmButtonColor } = getSwalTheme();
+      Swal.fire({
+        icon: "warning",
+        title: t("alerts.warning"),
+        text: "Insira um nome para a regra",
+        background,
+        color,
+        confirmButtonColor,
+      });
       return;
     }
 
@@ -148,16 +167,31 @@ export default function Automation() {
       const data = await res.json();
 
       setRules((prev) =>
-        form.id
-          ? prev.map((r) => (r.id === form.id ? data : r))
-          : [...prev, data]
+        form.id ? prev.map((r) => (r.id === form.id ? data : r)) : [...prev, data]
       );
 
-      Swal.fire(t("alerts.success"), t("alerts.saved"), "success");
+      const { background, color, confirmButtonColor } = getSwalTheme();
+      Swal.fire({
+        icon: "success",
+        title: t("alerts.success"),
+        text: t("alerts.saved"),
+        background,
+        color,
+        confirmButtonColor,
+      });
+
       setOpenModal(false);
       resetForm();
     } catch (e) {
-      Swal.fire(t("alerts.error"), e.message, "error");
+      const { background, color, confirmButtonColor } = getSwalTheme();
+      Swal.fire({
+        icon: "error",
+        title: t("alerts.error"),
+        text: e.message,
+        background,
+        color,
+        confirmButtonColor,
+      });
     }
   };
 
@@ -174,13 +208,20 @@ export default function Automation() {
   };
 
   const deleteRule = async (id) => {
+    const { background, color, confirmButtonColor, cancelButtonColor } = getSwalTheme();
+
     const confirm = await Swal.fire({
       title: t("alerts.confirm_delete"),
       icon: "warning",
       showCancelButton: true,
       confirmButtonText: t("buttons.confirm"),
       cancelButtonText: t("buttons.cancel"),
+      background,
+      color,
+      confirmButtonColor,
+      cancelButtonColor,
     });
+
     if (!confirm.isConfirmed) return;
 
     try {
@@ -195,9 +236,26 @@ export default function Automation() {
         },
       });
       setRules((prev) => prev.filter((r) => r.id !== id));
-      Swal.fire(t("alerts.success"), t("alerts.deleted"), "success");
+
+      const { background, color, confirmButtonColor } = getSwalTheme();
+      Swal.fire({
+        icon: "success",
+        title: t("alerts.success"),
+        text: t("alerts.deleted"),
+        background,
+        color,
+        confirmButtonColor,
+      });
     } catch (e) {
-      Swal.fire(t("alerts.error"), e.message, "error");
+      const { background, color, confirmButtonColor } = getSwalTheme();
+      Swal.fire({
+        icon: "error",
+        title: t("alerts.error"),
+        text: e.message,
+        background,
+        color,
+        confirmButtonColor,
+      });
     }
   };
 
@@ -286,7 +344,9 @@ export default function Automation() {
           </div>
 
           <div>
-            <label className="block mb-1 font-medium">{t("automation.rule_name")}</label>
+            <label className="block mb-1 font-medium">
+              {t("automation.rule_name")}
+            </label>
             <input
               type="text"
               value={form.name || ""}
@@ -296,11 +356,15 @@ export default function Automation() {
           </div>
 
           <div>
-            <label className="block mb-1 font-medium">{t("automation.condition")}</label>
+            <label className="block mb-1 font-medium">
+              {t("automation.condition")}
+            </label>
             <input
               type="text"
               value={form.match_text || ""}
-              onChange={(e) => setForm({ ...form, match_text: e.target.value })}
+              onChange={(e) =>
+                setForm({ ...form, match_text: e.target.value })
+              }
               className="w-full border border-slate-300 dark:border-gray-600 rounded-lg p-2 bg-white dark:bg-gray-700"
               placeholder="Ex: salário, uber, mercado..."
             />
@@ -309,7 +373,9 @@ export default function Automation() {
           {form.rule_type === "classification" && (
             <>
               <div>
-                <label className="block mb-1 font-medium">{t("transactions.type")}</label>
+                <label className="block mb-1 font-medium">
+                  {t("transactions.type")}
+                </label>
                 <select
                   value={form.actions.type || ""}
                   onChange={(e) =>
@@ -320,24 +386,35 @@ export default function Automation() {
                   }
                   className="w-full border border-slate-300 dark:border-gray-600 rounded-lg p-2 bg-white dark:bg-gray-700"
                 >
-                  <option value="entrada">{t("transactions.income")}</option>
-                  <option value="saida">{t("transactions.expense")}</option>
+                  <option value="entrada">
+                    {t("transactions.income")}
+                  </option>
+                  <option value="saida">
+                    {t("transactions.expense")}
+                  </option>
                 </select>
               </div>
 
               <div>
-                <label className="block mb-1 font-medium">{t("transactions.category")}</label>
+                <label className="block mb-1 font-medium">
+                  {t("transactions.category")}
+                </label>
                 <select
                   value={form.actions.set_category || ""}
                   onChange={(e) =>
                     setForm({
                       ...form,
-                      actions: { ...form.actions, set_category: e.target.value },
+                      actions: {
+                        ...form.actions,
+                        set_category: e.target.value,
+                      },
                     })
                   }
                   className="w-full border border-slate-300 dark:border-gray-600 rounded-lg p-2 bg-white dark:bg-gray-700"
                 >
-                  <option value="">{t("categories.title") || "Selecione"}</option>
+                  <option value="">
+                    {t("categories.title") || "Selecione"}
+                  </option>
                   {categories.map((c) => (
                     <option key={c.id} value={c.id}>
                       {c.name}
@@ -347,18 +424,25 @@ export default function Automation() {
               </div>
 
               <div>
-                <label className="block mb-1 font-medium">{t("transactions.group")} (opcional)</label>
+                <label className="block mb-1 font-medium">
+                  {t("transactions.group")} (opcional)
+                </label>
                 <select
                   value={form.actions.set_group || ""}
                   onChange={(e) =>
                     setForm({
                       ...form,
-                      actions: { ...form.actions, set_group: e.target.value },
+                      actions: {
+                        ...form.actions,
+                        set_group: e.target.value,
+                      },
                     })
                   }
                   className="w-full border border-slate-300 dark:border-gray-600 rounded-lg p-2 bg-white dark:bg-gray-700"
                 >
-                  <option value="">{t("groups.title") || "Selecione"}</option>
+                  <option value="">
+                    {t("groups.title") || "Selecione"}
+                  </option>
                   {groups.map((g) => (
                     <option key={g.id} value={g.id}>
                       {g.name}
@@ -383,7 +467,9 @@ export default function Automation() {
                   }
                   className="w-full border border-slate-300 dark:border-gray-600 rounded-lg p-2 bg-white dark:bg-gray-700"
                 >
-                  <option value="">{t("automation.goal") || "Selecione"}</option>
+                  <option value="">
+                    {t("automation.goal") || "Selecione"}
+                  </option>
                   {goals.map((g) => (
                     <option key={g.id} value={g.id}>
                       {g.name}
@@ -400,7 +486,10 @@ export default function Automation() {
                   onChange={(e) =>
                     setForm({
                       ...form,
-                      actions: { ...form.actions, goal_percent: e.target.value },
+                      actions: {
+                        ...form.actions,
+                        goal_percent: e.target.value,
+                      },
                     })
                   }
                   className="border border-slate-300 dark:border-gray-600 rounded-lg p-2 bg-white dark:bg-gray-700"
@@ -412,7 +501,10 @@ export default function Automation() {
                   onChange={(e) =>
                     setForm({
                       ...form,
-                      actions: { ...form.actions, goal_fixed: e.target.value },
+                      actions: {
+                        ...form.actions,
+                        goal_fixed: e.target.value,
+                      },
                     })
                   }
                   className="border border-slate-300 dark:border-gray-600 rounded-lg p-2 bg-white dark:bg-gray-700"
