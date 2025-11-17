@@ -17,6 +17,7 @@ import TransactionsGroups from "./Pages/Transactions/Groups";
 import TransactionsCategories from "./Pages/Transactions/Categories";
 import TransactionsAutomation from "./Pages/Transactions/Automation";
 import VerifiedSuccess from "./Pages/Auth/EmailVerifiedSucces";
+import Goals from "./Pages/Goals";
 import '../css/app.css';
 import './bootstrap';
 
@@ -42,6 +43,7 @@ function App() {
                     <Route path="/transactions/groups" element={<TransactionsGroups />} />
                     <Route path="/transactions/categories" element={<TransactionsCategories />} />
                     <Route path="/transactions/automation" element={<TransactionsAutomation />} />
+                    <Route path="/goals" element={<Goals />} />
                     <Route path="/email/verified-success" element={<VerifiedSuccess />} />
                     
                 </Routes>

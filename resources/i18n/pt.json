@@ -169,5 +169,31 @@
     "more_info": "Mais informações",
     "burn_rate": "Velocidade média de gasto diário no período filtrado: total de saídas dividido pelo número de dias.",
     "runway": "Quantos dias você consegue operar mantendo o burn atual, com base no saldo atual (runway = saldo atual ÷ burn/dia)."
+  },
+  "goals": {
+    "title": "Metas financeiras",
+    "new": "Nova meta",
+    "list": "Metas cadastradas",
+    "name": "Nome da meta",
+    "add": "Adicionar meta",
+    "target": "Valor objetivo",
+    "current": "Valor acumulado",
+    "due_date": "Data limite",
+    "type": "Tipo de meta",
+    "type_saving": "Poupança / reserva",
+    "type_debt": "Quitar dívidas",
+    "type_investment": "Investimento",
+    "type_other": "Outra",
+    "description": "Descrição / observações",
+    "description_placeholder": "Ex: Usar apenas em emergências reais, manter sempre 6 meses de despesas.",
+    "progress": "Progresso",
+    "no_progress": "Sem dados de progresso ainda",
+    "summary_total": "Total de metas",
+    "summary_target_sum": "Soma dos objetivos",
+    "summary_avg_progress": "Progresso médio",
+    "summary_hint": "O progresso é exibido quando a API retornar o valor acumulado (current_amount) para as metas.",
+    "name_required": "Informe um nome para a meta.",
+    "target_required": "Informe um valor objetivo maior que zero.",
+    "no_goals": "Você ainda não cadastrou nenhuma meta."
   }
 }

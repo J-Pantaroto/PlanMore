@@ -20,6 +20,17 @@ function subItemClass(isActive) {
   ].join(" ");
 }
 
+function getSwalTheme() {
+  const isDark = document.documentElement.classList.contains("dark");
+
+  return {
+    background: isDark ? "#020617" : "#ffffff",
+    color: isDark ? "#e5e7eb" : "#111827",
+    confirmButtonColor: "#9333ea",
+    cancelButtonColor: "#6b7280",
+  };
+}
+
 export default function Shell({ children }) {
   const location = useLocation();
   const isTxSectionActive = useMemo(
@@ -43,7 +54,6 @@ export default function Shell({ children }) {
     if (typeof window.i18next !== "undefined") {
       window.i18next.changeLanguage(savedLocale);
     }
-
   }, []);
 
   useEffect(() => {
@@ -51,6 +61,8 @@ export default function Shell({ children }) {
   }, [isTxSectionActive]);
 
   const handleLogout = async () => {
+    const { background, color, confirmButtonColor, cancelButtonColor } = getSwalTheme();
+
     const confirm = await Swal.fire({
       title: "Deseja sair?",
       text: "Você será desconectado da sua conta.",
@@ -58,8 +70,10 @@ export default function Shell({ children }) {
       showCancelButton: true,
       confirmButtonText: "Sim, sair",
       cancelButtonText: "Cancelar",
-      background: "#1e1b4b",
-      color: "#fff",
+      background,
+      color,
+      confirmButtonColor,
+      cancelButtonColor,
     });
 
     if (!confirm.isConfirmed) return;
@@ -78,25 +92,42 @@ export default function Shell({ children }) {
       });
 
       if (res.ok) {
-        Swal.fire({
+        const { background, color } = getSwalTheme();
+        await Swal.fire({
           icon: "success",
           title: "Até logo!",
           text: "Você saiu da sua conta.",
           timer: 2000,
           showConfirmButton: false,
-          background: "#1e1b4b",
-          color: "#fff",
-        }).then(() => {
-          localStorage.removeItem("theme");
-          localStorage.removeItem("locale");
-          window.location.href = "/login";
+          background,
+          color,
         });
+
+        localStorage.removeItem("theme");
+        localStorage.removeItem("locale");
+        window.location.href = "/login";
       } else {
-        Swal.fire("Erro", "Não foi possível sair da conta.", "error");
+        const { background, color, confirmButtonColor } = getSwalTheme();
+        Swal.fire({
+          icon: "error",
+          title: "Erro",
+          text: "Não foi possível sair da conta.",
+          background,
+          color,
+          confirmButtonColor,
+        });
       }
     } catch (err) {
       console.error(err);
-      Swal.fire("Erro", "Falha na comunicação com o servidor.", "error");
+      const { background, color, confirmButtonColor } = getSwalTheme();
+      Swal.fire({
+        icon: "error",
+        title: "Erro",
+        text: "Falha na comunicação com o servidor.",
+        background,
+        color,
+        confirmButtonColor,
+      });
     }
   };
 
@@ -169,6 +200,14 @@ export default function Shell({ children }) {
               </div>
             )}
           </div>
+
+          {/* NOVO: Metas financeiras */}
+          <NavLink
+            to="/goals"
+            className={({ isActive }) => itemClass(isActive)}
+          >
+            <span>🎯</span> <span>Metas</span>
+          </NavLink>
 
           <NavLink
             to="/settings"

@@ -169,5 +169,31 @@
     "more_info": "More info",
     "burn_rate": "Average daily spending over the selected period: total expenses divided by the number of days.",
     "runway": "How many days you can operate at the current burn, given the current balance (runway = current balance ÷ burn/day)."
+  },
+  "goals": {
+    "title": "Financial Goals",
+    "new": "New Goal",
+    "list": "Registered Goals",
+    "name": "Goal Name",
+    "add": "Add Goal",
+    "target": "Target Value",
+    "current": "Accumulated Value",
+    "due_date": "Due Date",
+    "type": "Goal Type",
+    "type_saving": "Savings / Reserve",
+    "type_debt": "Pay Off Debts",
+    "type_investment": "Investment",
+    "type_other": "Other",
+    "description": "Description / Notes",
+    "description_placeholder": "Ex: Use only in real emergencies, always keep 6 months of expenses.",
+    "progress": "Progress",
+    "no_progress": "No progress data yet",
+    "summary_total": "Total Goals",
+    "summary_target_sum": "Sum of objectives",
+    "summary_avg_progress": "Average progress",
+    "summary_hint": "Progress is displayed when the API returns the accumulated value (current_amount) for the goals.",
+    "name_required": "Enter a name for the goal.",
+    "target_required": "Enter a target value greater than zero.",
+    "no_goals": "You have not yet registered any goals."
   }
 }
