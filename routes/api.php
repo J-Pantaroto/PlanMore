@@ -46,8 +46,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/groups/{id}', [GroupController::class, 'destroy']);
 
     //Geral
-    Route::apiResource('goals', GoalController::class);
-    Route::post('/recognize-category', [CategoryRecognitionController::class, 'recognize']);
+    Route::get('/goals', [GoalController::class, 'index']);
+    Route::post('/goals', [GoalController::class, 'store']);
+    Route::put('/goals/{id}', [GoalController::class, 'update']);
+    Route::delete('/goals/{id}', [GoalController::class, 'destroy']);    Route::post('/recognize-category', [CategoryRecognitionController::class, 'recognize']);
     Route::get('/export/excel', [ExportController::class, 'exportExcel']);
     Route::get('/export/pdf', [ExportController::class, 'exportPDF']);
     Route::get('/user/preferences', [UserPreferenceController::class, 'show']);

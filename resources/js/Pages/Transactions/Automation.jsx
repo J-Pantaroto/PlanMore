@@ -266,7 +266,10 @@ export default function Automation() {
           <h1 className="text-2xl font-semibold text-slate-900 dark:text-white">
             {t("automation.title")}
           </h1>
-          <button class="px-4 py-2 rounded-lg bg-violet-700 text-white hover:bg-violet-800 transition" onClick={() => setOpenModal(true)}>
+          <button
+            className="px-4 py-2 rounded-lg bg-violet-700 text-white hover:bg-violet-800 transition"
+            onClick={() => setOpenModal(true)}
+          >
             {t("automation.new_rule")}
           </button>
         </div>

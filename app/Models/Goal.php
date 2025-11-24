@@ -2,18 +2,31 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Goal extends Model
 {
-    public function allocations()
-    {
-        return $this->hasMany(GoalAllocation::class);
-    }
+    use HasFactory;
 
-    public function getProgressAttribute()
+    protected $fillable = [
+        'user_id',
+        'name',
+        'target_amount',
+        'current_amount',
+        'type',
+        'deadline',
+        'description',
+    ];
+
+    protected $casts = [
+        'target_amount'  => 'float',
+        'current_amount' => 'float',
+        'deadline'       => 'date',
+    ];
+
+    public function user()
     {
-        $total = $this->allocations()->sum('amount');
-        return min(($total / max($this->target_amount, 1)) * 100, 100);
+        return $this->belongsTo(User::class);
     }
 }

@@ -71,6 +71,7 @@ export default function TransactionsIndex() {
   const hh = String(today.getHours()).padStart(2, "0");
   const min = String(today.getMinutes()).padStart(2, "0");
 
+  const [goals, setGoals] = useState([]);
   const [list, setList] = useState([]);
   const [editingId, setEditingId] = useState(null);
   const [editForm, setEditForm] = useState({});
@@ -104,6 +105,8 @@ export default function TransactionsIndex() {
     fim: "",
     parcelado: false,
     parcelas: 1,
+    goal_id: "",
+    goal_amount: "",
   });
 
   const resetModal = useCallback(() => {
@@ -119,6 +122,8 @@ export default function TransactionsIndex() {
       fim: "",
       parcelado: false,
       parcelas: 1,
+      goal_id: "",
+      goal_amount: "",
     });
   }, [yyyy, mm, dd, hh, min]);
 
@@ -126,10 +131,11 @@ export default function TransactionsIndex() {
     setLoading(true);
     try {
       const params = { ...filters, page, per_page: perPage };
-      const [tx, cats, grps] = await Promise.all([
+      const [tx, cats, grps, gos] = await Promise.all([
         api("/api/transactions", { params }),
         api("/api/categories"),
         api("/api/groups"),
+        api("/api/goals"),
       ]);
 
       if (tx && tx.data) {
@@ -144,6 +150,7 @@ export default function TransactionsIndex() {
 
       setCategories(Array.isArray(cats) ? cats : []);
       setGroups(Array.isArray(grps) ? grps : []);
+      setGoals(Array.isArray(gos) ? gos : []);
     } finally {
       setLoading(false);
     }
@@ -228,6 +235,8 @@ export default function TransactionsIndex() {
       fim: row.recurrence_end_date || "",
       parcelado: row.is_installment,
       parcelas: row.installments || 1,
+      goal_id: "",
+      goal_amount: "",
     });
     setOpenModal(true);
   }
@@ -361,6 +370,10 @@ export default function TransactionsIndex() {
         is_recurring: !!modalForm.recorrente,
         recurrence_interval: modalForm.recorrente ? modalForm.intervalo : undefined,
         recurrence_end_date: modalForm.recorrente ? (modalForm.fim || undefined) : undefined,
+        goal_id: modalForm.goal_id || null,
+        goal_amount: modalForm.goal_amount
+          ? Number(String(modalForm.goal_amount).replace(",", "."))
+          : undefined,
       };
 
       if (editingId) {
@@ -604,7 +617,9 @@ export default function TransactionsIndex() {
             <select
               className="w-full border border-slate-300 dark:border-gray-600 rounded-lg p-2 bg-white dark:bg-gray-700 text-slate-900 dark:text-gray-100"
               value={modalForm.tipo}
-              onChange={(e) => setModalForm({ ...modalForm, tipo: e.target.value })}
+              onChange={(e) =>
+                setModalForm({ ...modalForm, tipo: e.target.value })
+              }
             >
               <option value="entrada">{t("transactions.income")}</option>
               <option value="saida">{t("transactions.expense")}</option>
@@ -652,6 +667,65 @@ export default function TransactionsIndex() {
               ))}
             </select>
           </div>
+
+          {modalForm.tipo === "entrada" && (
+            <>
+              <div>
+                <label className="block mb-1 font-medium">
+                  {t("goals.title")} ({t("buttons.optional")})
+                </label>
+                <select
+                  className="w-full border border-slate-300 dark:border-gray-600 rounded-lg p-2 bg-white dark:bg-gray-700 text-slate-900 dark:text-gray-100"
+                  value={modalForm.goal_id}
+                  onChange={(e) =>
+                    setModalForm({
+                      ...modalForm,
+                      goal_id: e.target.value,
+                      goal_amount: "",
+                    })
+                  }
+                >
+                  <option value="">{t("buttons.optional")}</option>
+                  {goals.map((g) => (
+                    <option key={g.id} value={g.id}>
+                      {g.name}
+                      {g.target_amount
+                        ? ` — ${Number(g.current_amount || 0).toLocaleString(
+                            "pt-BR",
+                            { style: "currency", currency: "BRL" }
+                          )} / ${Number(g.target_amount).toLocaleString(
+                            "pt-BR",
+                            { style: "currency", currency: "BRL" }
+                          )}`
+                        : ""}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {modalForm.goal_id && (
+                <div>
+                  <label className="block mb-1 font-medium">
+                    Valor para meta ({t("buttons.optional")})
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    className="w-full border border-slate-300 dark:border-gray-600 rounded-lg p-2 bg-white dark:bg-gray-700 text-slate-900 dark:text-gray-100"
+                    placeholder="Deixe em branco para usar o valor total da transação"
+                    value={modalForm.goal_amount}
+                    onChange={(e) =>
+                      setModalForm({
+                        ...modalForm,
+                        goal_amount: e.target.value,
+                      })
+                    }
+                  />
+                </div>
+              )}
+            </>
+          )}
+
           <div>
             <label className="block mb-1 font-medium">
               {t("transactions.value")}

@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from "react";
-import Shell from "../Layouts/Shell";
-import { api } from "../bootstrap";
-import { useTranslation } from "react-i18next";
+import React, { useEffect, useMemo, useState } from "react";
+import Shell from "@/Layouts/Shell";
+import { api } from "@/bootstrap";
 import Swal from "sweetalert2";
+import { useTranslation } from "react-i18next";
 
 function getSwalTheme() {
   const isDark = document.documentElement.classList.contains("dark");
@@ -21,161 +21,163 @@ const money = (n) =>
     currency: "BRL",
   });
 
-const fmtDate = (s) => {
-  if (!s) return "-";
-  const d = new Date(s);
-  if (isNaN(d)) return s;
-  const dd = String(d.getDate()).padStart(2, "0");
-  const mm = String(d.getMonth() + 1).padStart(2, "0");
-  const yyyy = d.getFullYear();
-  return `${dd}/${mm}/${yyyy}`;
+const fmtDate = (value) => {
+  if (!value) return "-";
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return String(value);
+  return d.toLocaleDateString("pt-BR");
 };
 
 export default function Goals() {
   const { t } = useTranslation();
 
-  const [list, setList] = useState([]);
+  const [goals, setGoals] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const [showNewForm, setShowNewForm] = useState(false);
 
   const [form, setForm] = useState({
     name: "",
     target_amount: "",
-    due_date: "",
-    type: "saving",
-    description: "",
+    deadline: "",
   });
 
-  const [editingId, setEditingId] = useState(null);
-  const [editData, setEditData] = useState({
-    name: "",
-    target_amount: "",
-    due_date: "",
-    type: "saving",
-    description: "",
-  });
+  const totals = useMemo(() => {
+    if (!goals.length) {
+      return { count: 0, totalTarget: 0, avgProgress: 0 };
+    }
 
-  async function load() {
+    const count = goals.length;
+    const totalTarget = goals.reduce(
+      (sum, g) => sum + (Number(g.target_amount) || 0),
+      0
+    );
+
+    const avgProgress =
+      goals.reduce((acc, g) => {
+        const target = Number(g.target_amount) || 0;
+        const current = Number(g.current_amount) || 0;
+        if (!target) return acc;
+        return acc + (current / target) * 100;
+      }, 0) / count;
+
+    return {
+      count,
+      totalTarget,
+      avgProgress: Number.isFinite(avgProgress) ? avgProgress : 0,
+    };
+  }, [goals]);
+
+  async function loadGoals() {
     setLoading(true);
     try {
       const data = await api("/api/goals");
-      setList(Array.isArray(data) ? data : []);
+      setGoals(Array.isArray(data) ? data : []);
+    } catch (e) {
+      const { background, color, confirmButtonColor } = getSwalTheme();
+      Swal.fire({
+        icon: "error",
+        title: t("alerts.error"),
+        text: e?.message || "Falha ao carregar metas.",
+        background,
+        color,
+        confirmButtonColor,
+      });
     } finally {
       setLoading(false);
     }
   }
 
   useEffect(() => {
-    load();
+    loadGoals();
   }, []);
 
-  async function create() {
-    if (!form.name.trim()) {
-      const { background, color, confirmButtonColor } = getSwalTheme();
-      Swal.fire({
-        icon: "warning",
-        title: t("alerts.warning"),
-        text: t("goals.name_required") || "Informe um nome para a meta.",
-        background,
-        color,
-        confirmButtonColor,
-      });
-      return;
-    }
-
-    if (!form.target_amount || Number(form.target_amount) <= 0) {
-      const { background, color, confirmButtonColor } = getSwalTheme();
-      Swal.fire({
-        icon: "warning",
-        title: t("alerts.warning"),
-        text:
-          t("goals.target_required") ||
-          "Informe um valor objetivo maior que zero.",
-        background,
-        color,
-        confirmButtonColor,
-      });
-      return;
-    }
-
-    const payload = {
-      name: form.name.trim(),
-      target_amount: Number(form.target_amount),
-      due_date: form.due_date || null,
-      type: form.type || null,
-      description: form.description || null,
-    };
-
-    await api("/api/goals", { method: "POST", body: payload });
-
+  function resetForm() {
     setForm({
       name: "",
       target_amount: "",
-      due_date: "",
-      type: "saving",
-      description: "",
+      deadline: "",
     });
-
-    const { background, color, confirmButtonColor } = getSwalTheme();
-    Swal.fire({
-      icon: "success",
-      title: t("alerts.success"),
-      text: t("alerts.saved"),
-      background,
-      color,
-      confirmButtonColor,
-      timer: 1500,
-      showConfirmButton: false,
-    });
-
-    await load();
   }
 
-  async function saveEdit(id) {
-    if (!editData.name.trim()) return;
-    if (!editData.target_amount || Number(editData.target_amount) <= 0) return;
-
-    const payload = {
-      name: editData.name.trim(),
-      target_amount: Number(editData.target_amount),
-      due_date: editData.due_date || null,
-      type: editData.type || null,
-      description: editData.description || null,
-    };
-
-    await api(`/api/goals/${id}`, { method: "PUT", body: payload });
-
-    setEditingId(null);
-    setEditData({
-      name: "",
-      target_amount: "",
-      due_date: "",
-      type: "saving",
-      description: "",
-    });
+  async function handleCreate(e) {
+    e.preventDefault();
 
     const { background, color, confirmButtonColor } = getSwalTheme();
-    Swal.fire({
-      icon: "success",
-      title: t("alerts.success"),
-      text: t("alerts.updated"),
-      background,
-      color,
-      confirmButtonColor,
-      timer: 1500,
-      showConfirmButton: false,
-    });
 
-    await load();
+    if (!form.name.trim()) {
+      Swal.fire({
+        icon: "warning",
+        title: t("alerts.warning"),
+        text: t("goals.name") || "Informe o nome da meta.",
+        background,
+        color,
+        confirmButtonColor,
+      });
+      return;
+    }
+
+    const target = Number(
+      String(form.target_amount).replace(".", "").replace(",", ".")
+    );
+    if (!target || target <= 0) {
+      Swal.fire({
+        icon: "warning",
+        title: t("alerts.warning"),
+        text: t("goals.target") || "Informe um valor objetivo válido.",
+        background,
+        color,
+        confirmButtonColor,
+      });
+      return;
+    }
+
+    try {
+      const payload = {
+        name: form.name.trim(),
+        target_amount: target,
+        deadline: form.deadline || null,
+      };
+
+      await api("/api/goals", {
+        method: "POST",
+        body: payload,
+      });
+
+      await loadGoals();
+      resetForm();
+      setShowNewForm(false);
+
+      Swal.fire({
+        icon: "success",
+        title: t("alerts.success"),
+        text: t("alerts.saved"),
+        background,
+        color,
+        confirmButtonColor,
+      });
+    } catch (e) {
+      Swal.fire({
+        icon: "error",
+        title: t("alerts.error"),
+        text: e?.message || "Erro ao criar meta.",
+        background,
+        color,
+        confirmButtonColor,
+      });
+    }
   }
 
-  async function remove(id) {
+  async function handleDelete(goal) {
+    if (!goal?.id) return;
+
     const { background, color, confirmButtonColor, cancelButtonColor } =
       getSwalTheme();
 
-    const result = await Swal.fire({
-      title: t("alerts.confirm_delete"),
-      text: t("goals.title") || "Meta financeira",
+    const confirm = await Swal.fire({
       icon: "warning",
+      title: t("alerts.confirm_delete"),
+      text: `${t("goals.name")}: ${goal.name || ""}`,
       showCancelButton: true,
       confirmButtonText: t("buttons.confirm"),
       cancelButtonText: t("buttons.cancel"),
@@ -185,226 +187,303 @@ export default function Goals() {
       cancelButtonColor,
     });
 
-    if (!result.isConfirmed) return;
+    if (!confirm.isConfirmed) return;
 
-    await api(`/api/goals/${id}`, { method: "DELETE" });
+    try {
+      await api(`/api/goals/${goal.id}`, { method: "DELETE" });
 
-    const theme2 = getSwalTheme();
-    Swal.fire({
-      icon: "success",
-      title: t("alerts.success"),
-      text: t("alerts.deleted"),
-      background: theme2.background,
-      color: theme2.color,
-      confirmButtonColor: theme2.confirmButtonColor,
-      timer: 1500,
-      showConfirmButton: false,
-    });
+      setGoals((prev) => prev.filter((g) => g.id !== goal.id));
 
-    await load();
+      Swal.fire({
+        icon: "success",
+        title: t("alerts.success"),
+        text: t("alerts.deleted"),
+        background,
+        color,
+        confirmButtonColor,
+      });
+    } catch (e) {
+      Swal.fire({
+        icon: "error",
+        title: t("alerts.error"),
+        text: e?.message || "Erro ao excluir meta.",
+        background,
+        color,
+        confirmButtonColor,
+      });
+    }
   }
 
-  const totalGoals = list.length;
-  const totalTarget = list.reduce(
-    (acc, g) => acc + (Number(g.target_amount) || 0),
-    0
-  );
-  const withProgress = list.filter((g) => g.current_amount != null);
-  const avgProgress =
-    withProgress.length > 0
-      ? Math.round(
-          withProgress.reduce((acc, g) => {
-            const target = Number(g.target_amount) || 0;
-            const current = Number(g.current_amount) || 0;
-            if (!target || target <= 0) return acc;
-            return acc + Math.min(100, (current / target) * 100);
-          }, 0) / withProgress.length
-        )
-      : null;
+  async function handleCancel(goal) {
+    if (!goal?.id) return;
 
-  const typeLabel = (type) => {
-    if (!type) return t("goals.type_other") || "Outra";
-    if (type === "saving") return t("goals.type_saving") || "Poupança / reserva";
-    if (type === "debt") return t("goals.type_debt") || "Quitar dívidas";
-    if (type === "investment")
-      return t("goals.type_investment") || "Investimento";
-    return t("goals.type_other") || "Outra";
-  };
+    const { background, color, confirmButtonColor, cancelButtonColor } =
+      getSwalTheme();
+
+    const confirm = await Swal.fire({
+      icon: "warning",
+      title: "Cancelar meta?",
+      text: `A meta "${goal.name}" será marcada como cancelada, mas o histórico será mantido.`,
+      showCancelButton: true,
+      confirmButtonText: t("buttons.confirm"),
+      cancelButtonText: t("buttons.cancel"),
+      background,
+      color,
+      confirmButtonColor,
+      cancelButtonColor,
+    });
+
+    if (!confirm.isConfirmed) return;
+
+    try {
+      const updated = await api(`/api/goals/${goal.id}`, {
+        method: "PUT",
+        body: { status: "cancelada" },
+      });
+
+      setGoals((prev) =>
+        prev.map((g) => (g.id === goal.id ? updated : g))
+      );
+
+      Swal.fire({
+        icon: "success",
+        title: t("alerts.success"),
+        text: "Meta cancelada.",
+        background,
+        color,
+        confirmButtonColor,
+      });
+    } catch (e) {
+      Swal.fire({
+        icon: "error",
+        title: t("alerts.error"),
+        text: e?.message || "Erro ao cancelar meta.",
+        background,
+        color,
+        confirmButtonColor,
+      });
+    }
+  }
+
+  async function handleEditTarget(goal) {
+    if (!goal?.id) return;
+
+    const { background, color, confirmButtonColor, cancelButtonColor } =
+      getSwalTheme();
+
+    const result = await Swal.fire({
+      title: "Atualizar valor da meta",
+      text: `Defina um novo valor objetivo para "${goal.name}".`,
+      input: "number",
+      inputLabel: "Novo valor objetivo",
+      inputValue: goal.target_amount,
+      inputAttributes: {
+        min: "0",
+        step: "0.01",
+      },
+      showCancelButton: true,
+      confirmButtonText: t("buttons.save"),
+      cancelButtonText: t("buttons.cancel"),
+      background,
+      color,
+      confirmButtonColor,
+      cancelButtonColor,
+      preConfirm: (value) => {
+        const num = Number(String(value).replace(",", "."));
+        if (!num || num <= 0) {
+          Swal.showValidationMessage("Informe um valor válido maior que zero.");
+          return false;
+        }
+        return num;
+      },
+    });
+
+    if (!result.isConfirmed) return;
+
+    const newTarget = Number(result.value);
+
+    try {
+      const updated = await api(`/api/goals/${goal.id}`, {
+        method: "PUT",
+        body: { target_amount: newTarget },
+      });
+
+      setGoals((prev) =>
+        prev.map((g) => (g.id === goal.id ? updated : g))
+      );
+
+      Swal.fire({
+        icon: "success",
+        title: t("alerts.success"),
+        text: "Valor da meta atualizado.",
+        background,
+        color,
+        confirmButtonColor,
+      });
+    } catch (e) {
+      Swal.fire({
+        icon: "error",
+        title: t("alerts.error"),
+        text: e?.message || "Erro ao atualizar valor da meta.",
+        background,
+        color,
+        confirmButtonColor,
+      });
+    }
+  }
 
   return (
     <Shell>
-      <h1 className="text-2xl font-bold mb-6 text-slate-900 dark:text-white transition-colors duration-300">
-        {t("goals.title") || "Metas financeiras"}
+      <h1 className="text-2xl font-bold mb-6 text-slate-900 dark:text-white">
+        {t("goals.title")}
       </h1>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-4 transition-colors duration-300">
-          <p className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
-            {t("goals.summary_total") || "Total de metas"}
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-5 transition-colors duration-300">
+          <p className="text-xs font-semibold uppercase text-slate-500 dark:text-gray-400 mb-1">
+            TOTAL DE METAS
           </p>
-          <p className="text-2xl font-bold mt-1 text-slate-900 dark:text-white">
-            {totalGoals}
-          </p>
-        </div>
-
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-4 transition-colors duration-300">
-          <p className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
-            {t("goals.summary_target_sum") || "Soma dos objetivos"}
-          </p>
-          <p className="text-2xl font-bold mt-1 text-slate-900 dark:text-white">
-            {money(totalTarget)}
+          <p className="text-2xl font-bold text-slate-900 dark:text-white">
+            {totals.count}
           </p>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-4 transition-colors duration-300">
-          <p className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
-            {t("goals.summary_avg_progress") || "Progresso médio"}
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-5 transition-colors duration-300">
+          <p className="text-xs font-semibold uppercase text-slate-500 dark:text-gray-400 mb-1">
+            SOMA DOS OBJETIVOS
           </p>
-          <p className="text-2xl font-bold mt-1 text-slate-900 dark:text-white">
-            {avgProgress === null ? "-" : `${avgProgress}%`}
+          <p className="text-2xl font-bold text-slate-900 dark:text-white">
+            {money(totals.totalTarget)}
           </p>
-          {avgProgress === null && (
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-              {t("goals.summary_hint") ||
-                "O progresso é exibido quando a API retornar current_amount para as metas."}
-            </p>
-          )}
+        </div>
+
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-5 transition-colors duration-300">
+          <p className="text-xs font-semibold uppercase text-slate-500 dark:text-gray-400 mb-1">
+            PROGRESSO MÉDIO
+          </p>
+          <p className="text-2xl font-bold text-slate-900 dark:text-white">
+            {totals.avgProgress.toFixed(0)}%
+          </p>
         </div>
       </div>
 
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow ring-1 ring-slate-200 dark:ring-gray-700 p-5 mb-8 transition-colors duration-300">
-        <h2 className="font-semibold mb-4 text-slate-900 dark:text-white">
-          {t("goals.new") || "Nova meta"}
+      <div className="mb-4 flex justify-between items-center">
+        <h2 className="text-lg font-semibold text-slate-900 dark:text白">
+          {t("goals.new")}
         </h2>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-          <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-1">
-              {t("goals.name") || "Nome da meta"}
-            </label>
-            <input
-              value={form.name}
-              onChange={(e) => setForm({ ...form, name: e.target.value })}
-              placeholder={t("goals.add") || "Ex: Reserva de emergência"}
-              className="w-full border border-slate-300 dark:border-gray-600 bg-white dark:bg-gray-700 
-                         text-slate-900 dark:text-gray-100 rounded-lg p-2 transition-colors duration-300"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-1">
-              {t("goals.target") || "Valor objetivo (R$)"}
-            </label>
-            <input
-              type="number"
-              min="0"
-              step="0.01"
-              value={form.target_amount}
-              onChange={(e) =>
-                setForm({ ...form, target_amount: e.target.value })
-              }
-              placeholder="Ex: 5000.00"
-              className="w-full border border-slate-300 dark:border-gray-600 bg-white dark:bg-gray-700 
-                         text-slate-900 dark:text-gray-100 rounded-lg p-2 transition-colors duration-300"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-1">
-              {t("goals.due_date") || "Data limite"}
-            </label>
-            <input
-              type="date"
-              value={form.due_date}
-              onChange={(e) => setForm({ ...form, due_date: e.target.value })}
-              className="w-full border border-slate-300 dark:border-gray-600 bg-white dark:bg-gray-700 
-                         text-slate-900 dark:text-gray-100 rounded-lg p-2 transition-colors duration-300"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-1">
-              {t("goals.type") || "Tipo de meta"}
-            </label>
-            <select
-              value={form.type}
-              onChange={(e) => setForm({ ...form, type: e.target.value })}
-              className="w-full border border-slate-300 dark:border-gray-600 bg-white dark:bg-gray-700 
-                         text-slate-900 dark:text-gray-100 rounded-lg p-2 transition-colors duration-300"
-            >
-              <option value="saving">
-                {t("goals.type_saving") || "Poupança / reserva"}
-              </option>
-              <option value="debt">
-                {t("goals.type_debt") || "Quitar dívidas"}
-              </option>
-              <option value="investment">
-                {t("goals.type_investment") || "Investimento"}
-              </option>
-              <option value="other">
-                {t("goals.type_other") || "Outra"}
-              </option>
-            </select>
-          </div>
-        </div>
-
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-1">
-            {t("goals.description") || "Descrição / observações"}
-          </label>
-          <textarea
-            rows={2}
-            value={form.description}
-            onChange={(e) =>
-              setForm({ ...form, description: e.target.value })
-            }
-            placeholder={
-              t("goals.description_placeholder") ||
-              "Ex: Usar apenas sob emergências reais, manter sempre 6 meses de despesas."
-            }
-            className="w-full border border-slate-300 dark:border-gray-600 bg-white dark:bg-gray-700 
-                       text-slate-900 dark:text-gray-100 rounded-lg p-2 transition-colors duration-300"
-          />
-        </div>
-
-        <div className="flex justify-end">
+        {!showNewForm && (
           <button
-            onClick={create}
-            className="px-5 py-2.5 rounded-lg bg-violet-700 text-white hover:bg-violet-800 transition"
+            type="button"
+            onClick={() => setShowNewForm(true)}
+            className="px-4 py-2 rounded-lg bg-violet-700 text-white text-sm font-medium hover:bg-violet-800 transition"
           >
-            {t("buttons.add") || "Adicionar meta"}
+            {t("buttons.add")} {t("goals.new").toLowerCase()}
           </button>
-        </div>
+        )}
       </div>
 
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow ring-1 ring-slate-200 dark:ring-gray-700 transition-colors duration-300">
+      {showNewForm && (
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6 mb-8 transition-colors duration-300">
+          <form onSubmit={handleCreate} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-800 dark:text-gray-100 mb-1">
+                  {t("goals.name")}
+                </label>
+                <input
+                  type="text"
+                  value={form.name}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, name: e.target.value }))
+                  }
+                  placeholder={t("goals.name")}
+                  className="w-full border border-slate-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-900 text-slate-900 dark:text-gray-100"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-800 dark:text-gray-100 mb-1">
+                  {t("goals.target")}
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={form.target_amount}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, target_amount: e.target.value }))
+                  }
+                  placeholder="Ex: 5000.00"
+                  className="w-full border border-slate-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-900 text-slate-900 dark:text-gray-100"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-800 dark:text-gray-100 mb-1">
+                  {t("goals.due_date")}
+                </label>
+                <input
+                  type="date"
+                  value={form.deadline}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, deadline: e.target.value }))
+                  }
+                  className="w-full border border-slate-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-900 text-slate-900 dark:text-gray-100"
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  resetForm();
+                  setShowNewForm(false);
+                }}
+                className="px-4 py-2 rounded-lg bg-slate-200 dark:bg-gray-700 dark:text-gray-200 hover:bg-slate-300 dark:hover:bg-gray-600 text-sm font-medium"
+              >
+                {t("buttons.cancel")}
+              </button>
+              <button
+                type="submit"
+                className="px-4 py-2 rounded-lg bg-violet-700 hover:bg-violet-800 text-white text-sm font-medium"
+              >
+                {t("buttons.add")}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow transition-colors duration-300">
         <div className="p-4 pb-0">
           <h3 className="font-semibold mb-3 text-slate-900 dark:text-white">
-            {t("goals.list") || "Metas cadastradas"}
+            {t("goals.list")}
           </h3>
         </div>
 
         <div className="overflow-x-auto">
-          <table className="min-w-full text-sm bg-white dark:bg-gray-800 text-slate-900 dark:text-gray-100 transition-colors duration-300">
+          <table className="min-w-full text-sm bg-white dark:bg-gray-800 text-slate-900 dark:text-gray-100">
             <thead>
               <tr className="bg-slate-50 dark:bg-gray-700 text-slate-700 dark:text-gray-200">
                 <th className="text-left p-3 font-semibold">
-                  {t("goals.name") || "Meta"}
+                  {t("goals.name")}
                 </th>
                 <th className="text-left p-3 font-semibold">
-                  {t("goals.type") || "Tipo"}
+                  {t("goals.target")}
                 </th>
                 <th className="text-left p-3 font-semibold">
-                  {t("goals.target") || "Objetivo"}
+                  {t("goals.current")}
                 </th>
                 <th className="text-left p-3 font-semibold">
-                  {t("goals.due_date") || "Prazo"}
+                  {t("goals.due_date")}
                 </th>
-                <th className="text-left p-3 font-semibold">
-                  {t("goals.progress") || "Progresso"}
-                </th>
+                <th className="text-left p-3 font-semibold">Status</th>
                 <th className="text-right p-3 font-semibold">
-                  {t("transactions.actions") || "Ações"}
+                  {t("transactions.actions")}
                 </th>
               </tr>
             </thead>
@@ -415,192 +494,64 @@ export default function Goals() {
                     {t("transactions.loading")}
                   </td>
                 </tr>
-              ) : list.length === 0 ? (
+              ) : goals.length === 0 ? (
                 <tr>
                   <td colSpan="6" className="p-6 text-center">
-                    {t("goals.no_goals") || "Nenhuma meta cadastrada."}
+                    {t("goals.no_goals")}
                   </td>
                 </tr>
               ) : (
-                list.map((g) => {
-                  const target = Number(g.target_amount) || 0;
-                  const current = Number(g.current_amount) || 0;
-                  const percent =
-                    target > 0 ? Math.min(100, (current / target) * 100) : null;
+                goals.map((g, index) => {
+                  const key = g.id ?? `goal-${index}`;
+                  const progress =
+                    g.target_amount > 0
+                      ? ((Number(g.current_amount) || 0) /
+                          Number(g.target_amount)) *
+                        100
+                      : 0;
 
                   return (
                     <tr
-                      key={g.id}
-                      className="border-t border-slate-100 dark:border-gray-700 transition-colors duration-300"
+                      key={key}
+                      className="border-t border-slate-100 dark:border-gray-700"
                     >
-                      <td className="p-3 align-top">
-                        {editingId === g.id ? (
-                          <input
-                            value={editData.name}
-                            onChange={(e) =>
-                              setEditData({ ...editData, name: e.target.value })
-                            }
-                            className="border border-slate-300 dark:border-gray-600 bg-white dark:bg-gray-700 
-                                       text-slate-900 dark:text-gray-100 rounded p-1 w-full transition-colors duration-300"
-                          />
-                        ) : (
-                          <>
-                            <div className="font-semibold">{g.name}</div>
-                            {g.description && (
-                              <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                                {g.description}
-                              </div>
-                            )}
-                          </>
-                        )}
+                      <td className="p-3">{g.name}</td>
+                      <td className="p-3">{money(g.target_amount)}</td>
+                      <td className="p-3">
+                        {money(g.current_amount)}{" "}
+                        <span className="text-xs text-slate-500 dark:text-gray-400">
+                          ({progress.toFixed(0)}%)
+                        </span>
                       </td>
-
-                      <td className="p-3 align-top">
-                        {editingId === g.id ? (
-                          <select
-                            value={editData.type}
-                            onChange={(e) =>
-                              setEditData({ ...editData, type: e.target.value })
-                            }
-                            className="border border-slate-300 dark:border-gray-600 bg-white dark:bg-gray-700 
-                                       text-slate-900 dark:text-gray-100 rounded p-1 transition-colors duration-300"
+                      <td className="p-3">{fmtDate(g.deadline)}</td>
+                      <td className="p-3 capitalize">
+                        {g.status || "em progresso"}
+                      </td>
+                      <td className="p-3 text-right">
+                        <div className="flex justify-end gap-3">
+                          <button
+                            onClick={() => handleEditTarget(g)}
+                            className="text-violet-600 dark:text-violet-400 hover:underline text-xs sm:text-sm"
                           >
-                            <option value="saving">
-                              {t("goals.type_saving") ||
-                                "Poupança / reserva"}
-                            </option>
-                            <option value="debt">
-                              {t("goals.type_debt") || "Quitar dívidas"}
-                            </option>
-                            <option value="investment">
-                              {t("goals.type_investment") || "Investimento"}
-                            </option>
-                            <option value="other">
-                              {t("goals.type_other") || "Outra"}
-                            </option>
-                          </select>
-                        ) : (
-                          typeLabel(g.type)
-                        )}
-                      </td>
+                            Ajustar objetivo
+                          </button>
 
-                      <td className="p-3 align-top">
-                        {editingId === g.id ? (
-                          <input
-                            type="number"
-                            min="0"
-                            step="0.01"
-                            value={editData.target_amount}
-                            onChange={(e) =>
-                              setEditData({
-                                ...editData,
-                                target_amount: e.target.value,
-                              })
-                            }
-                            className="border border-slate-300 dark:border-gray-600 bg-white dark:bg-gray-700 
-                                       text-slate-900 dark:text-gray-100 rounded p-1 w-full transition-colors duration-300"
-                          />
-                        ) : target > 0 ? (
-                          money(target)
-                        ) : (
-                          "-"
-                        )}
-                      </td>
+                          {g.status !== "cancelada" && (
+                            <button
+                              onClick={() => handleCancel(g)}
+                              className="text-amber-600 dark:text-amber-400 hover:underline text-xs sm:text-sm"
+                            >
+                              Cancelar
+                            </button>
+                          )}
 
-                      <td className="p-3 align-top">
-                        {editingId === g.id ? (
-                          <input
-                            type="date"
-                            value={editData.due_date}
-                            onChange={(e) =>
-                              setEditData({
-                                ...editData,
-                                due_date: e.target.value,
-                              })
-                            }
-                            className="border border-slate-300 dark:border-gray-600 bg-white dark:bg-gray-700 
-                                       text-slate-900 dark:text-gray-100 rounded p-1 transition-colors duration-300"
-                          />
-                        ) : (
-                          fmtDate(g.due_date)
-                        )}
-                      </td>
-
-                      <td className="p-3 align-top">
-                        {percent === null ? (
-                          <span className="text-xs text-slate-500 dark:text-slate-400">
-                            {t("goals.no_progress") ||
-                              "Sem dados de progresso ainda"}
-                          </span>
-                        ) : (
-                          <div className="space-y-1">
-                            <div className="flex justify-between text-xs text-slate-600 dark:text-slate-300">
-                              <span>{money(current)}</span>
-                              <span>{percent.toFixed(0)}%</span>
-                            </div>
-                            <div className="w-full h-2 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden">
-                              <div
-                                className="h-2 bg-violet-600"
-                                style={{ width: `${percent}%` }}
-                              />
-                            </div>
-                          </div>
-                        )}
-                      </td>
-
-                      <td className="p-3 text-right align-top">
-                        {editingId === g.id ? (
-                          <div className="flex items-center gap-2 justify-end">
-                            <button
-                              onClick={() => saveEdit(g.id)}
-                              className="text-green-600 hover:underline"
-                            >
-                              {t("buttons.save")}
-                            </button>
-                            <button
-                              onClick={() => {
-                                setEditingId(null);
-                                setEditData({
-                                  name: "",
-                                  target_amount: "",
-                                  due_date: "",
-                                  type: "saving",
-                                  description: "",
-                                });
-                              }}
-                              className="text-slate-600 dark:text-gray-300 hover:underline"
-                            >
-                              {t("buttons.cancel")}
-                            </button>
-                          </div>
-                        ) : (
-                          <div className="flex items-center gap-2 justify-end">
-                            <button
-                              onClick={() => {
-                                setEditingId(g.id);
-                                setEditData({
-                                  name: g.name || "",
-                                  target_amount:
-                                    g.target_amount != null
-                                      ? String(g.target_amount)
-                                      : "",
-                                  due_date: g.due_date || "",
-                                  type: g.type || "saving",
-                                  description: g.description || "",
-                                });
-                              }}
-                              className="text-violet-600 hover:underline"
-                            >
-                              {t("buttons.edit")}
-                            </button>
-                            <button
-                              onClick={() => remove(g.id)}
-                              className="text-red-600 hover:underline"
-                            >
-                              {t("buttons.delete")}
-                            </button>
-                          </div>
-                        )}
+                          <button
+                            onClick={() => handleDelete(g)}
+                            className="text-red-600 dark:text-red-400 hover:underline text-xs sm:text-sm"
+                          >
+                            {t("buttons.delete")}
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );
