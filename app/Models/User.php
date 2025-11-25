@@ -19,11 +19,12 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     protected $fillable = [
         'name', 'email', 'password',
-        'provider_name', 'provider_id', 'avatar',
+        'provider_name', 'provider_id', 'avatar','telegram_chat_id','telegram_chat_id',
     ];
     
     protected $casts = [
         'email_verified_at' => 'datetime',
+        'preferences' => 'array',
     ];
     /**
      * The attributes that should be hidden for serialization.

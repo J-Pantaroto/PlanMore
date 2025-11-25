@@ -1,9 +1,9 @@
-// resources/js/Pages/Preferences.jsx
 import React from "react";
 import Swal from "sweetalert2";
 import Shell from "../Layouts/Shell";
 import usePreferences from "../hooks/userPreferences";
 import { useTranslation } from "react-i18next";
+import { api } from "../bootstrap";
 
 function getSwalTheme() {
   const isDark = document.documentElement.classList.contains("dark");
@@ -20,11 +20,7 @@ export default function Preferences() {
   const { t } = useTranslation();
   const { prefs, updatePrefs, resetPrefs, loading } = usePreferences();
 
-  const [telegramChatIdInput, setTelegramChatIdInput] = React.useState("");
-
-  React.useEffect(() => {
-    setTelegramChatIdInput(prefs.telegramChatId || "");
-  }, [prefs.telegramChatId]);
+  const [telegramLink, setTelegramLink] = React.useState("");
 
   if (loading)
     return (
@@ -87,24 +83,50 @@ export default function Preferences() {
 
   const toggle = (key) => handleUpdate({ [key]: !prefs[key] });
 
-  const handleSaveTelegramChatId = async () => {
-    const { background, color, confirmButtonColor } = getSwalTheme();
+  const handleToggleTelegram = async () => {
+    const newValue = !prefs.telegramEnabled;
 
-    if (!telegramChatIdInput.trim()) {
-      Swal.fire({
-        icon: "warning",
-        title: t("alerts.warning"),
-        text:
-          t("preferences.telegram_chat_id") ||
-          "Informe seu Telegram Chat ID para receber notificações.",
-        confirmButtonColor,
-        background,
-        color,
-      });
-      return;
+    // 1) Atualiza preferências (liga/desliga)
+    await handleUpdate({ telegramEnabled: newValue });
+
+    // 2) Se ligou, gera o link mágico e mostra
+    if (newValue) {
+      const { background, color, confirmButtonColor } = getSwalTheme();
+      try {
+        const res = await api("/api/user/telegram/link", {
+          method: "POST",
+        });
+
+        setTelegramLink(res.link || "");
+
+        Swal.fire({
+          icon: "info",
+          title: "Conecte seu Telegram",
+          html: `
+            <p>Abra o link abaixo no Telegram para vincular sua conta PlanMore:</p>
+            <p style="word-break: break-all; margin-top: 8px;"><code>${res.link}</code></p>
+            <p style="margin-top: 10px; font-size: 12px;">
+              Depois de abrir o bot, envie o comando <b>/start</b> para concluir a conexão.
+            </p>
+          `,
+          background,
+          color,
+          confirmButtonColor,
+        });
+
+        // Se quiser já abrir o Telegram automaticamente:
+        // window.open(res.link, "_blank");
+      } catch (e) {
+        Swal.fire({
+          icon: "error",
+          title: t("alerts.error"),
+          text: e?.message || "Erro ao gerar link do Telegram.",
+          ...getSwalTheme(),
+        });
+      }
+    } else {
+      setTelegramLink("");
     }
-
-    await handleUpdate({ telegramChatId: telegramChatIdInput.trim() });
   };
 
   return (
@@ -150,44 +172,44 @@ export default function Preferences() {
             {/* Telegram */}
             <Switch
               label={
-                t("preferences.telegram_notifications") ||
-                "Notificações via Telegram"
+                (t("preferences.telegram_notifications") ||
+                  "Notificações via Telegram") +
+                (prefs.telegramChatId ? " (conectado)" : "")
               }
               checked={!!prefs.telegramEnabled}
-              onChange={() => toggle("telegramEnabled")}
+              onChange={handleToggleTelegram}
             />
           </div>
 
-          {/* Bloco extra só quando Telegram está ativo */}
           {prefs.telegramEnabled && (
             <div className="mt-5 p-4 rounded-lg border border-purple-500/40 bg-purple-50/60 dark:bg-purple-950/20 dark:border-purple-400/40">
               <p className="text-sm text-gray-800 dark:text-gray-100 mb-2">
-                {t("preferences.telegram_help_text") ||
-                  "Informe seu Telegram Chat ID. Use o bot da PlanMore para obter esse código e cole aqui para receber notificações."}
+                {prefs.telegramChatId
+                  ? "Seu Telegram já está conectado e pronto para receber notificações."
+                  : "Geramos um link para você abrir o bot no Telegram. Abra o link e envie /start para finalizar a conexão."}
               </p>
 
-              <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center mt-2">
-                <input
-                  type="text"
-                  value={telegramChatIdInput}
-                  onChange={(e) => setTelegramChatIdInput(e.target.value)}
-                  placeholder={
-                    t("preferences.telegram_chat_id_placeholder") ||
-                    "Ex: 123456789"
-                  }
-                  className="w-full sm:flex-1 border border-gray-400 dark:border-gray-600 rounded-md px-3 py-2 
-                             bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 
-                             focus:outline-none focus:ring-2 focus:ring-purple-600 transition-all shadow-sm"
-                />
-                <button
-                  type="button"
-                  onClick={handleSaveTelegramChatId}
-                  className="px-4 py-2 rounded-md bg-purple-600 text-white text-sm font-medium 
-                             hover:bg-purple-700 transition-all shadow-sm"
-                >
-                  {t("buttons.save")}
-                </button>
-              </div>
+              {/* Mostra o último link gerado enquanto a página estiver aberta */}
+              {telegramLink && (
+                <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center mt-2">
+                  <input
+                    type="text"
+                    readOnly
+                    value={telegramLink}
+                    className="w-full sm:flex-1 border border-gray-400 dark:border-gray-600 rounded-md px-3 py-2 
+                               bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-xs"
+                  />
+                  <a
+                    href={telegramLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-4 py-2 rounded-md bg-sky-600 text-white text-sm font-medium 
+                               hover:bg-sky-700 transition-all shadow-sm"
+                  >
+                    Abrir no Telegram
+                  </a>
+                </div>
+              )}
             </div>
           )}
         </section>

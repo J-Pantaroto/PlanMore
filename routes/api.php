@@ -13,6 +13,10 @@ use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\GroupController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\TelegramWebhookController;
+
+Route::post('/telegram/webhook/{secret}', [TelegramWebhookController::class, 'handle'])
+    ->name('telegram.webhook');
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', function (Request $request) {
@@ -21,9 +25,10 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
 
-Route::middleware('auth:sanctum')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index']);
-});
+
+    Route::post('/user/telegram/link', [UserPreferenceController::class, 'generateTelegramLink']);
+
     Route::apiResource('automation-rules', AutomationRuleController::class);
 
     // Transactions CRUD
@@ -38,6 +43,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/categories/{id}', [CategoryController::class, 'update']);
     Route::delete('/categories/{id}', [CategoryController::class, 'destroy']);
     Route::post('/categories/recognize', [CategoryRecognitionController::class, 'recognize']);
+    Route::post('/recognize-category', [CategoryRecognitionController::class, 'recognize']);
 
     // Groups CRUD
     Route::get('/groups', [GroupController::class, 'index']);
@@ -45,21 +51,22 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/groups/{id}', [GroupController::class, 'update']);
     Route::delete('/groups/{id}', [GroupController::class, 'destroy']);
 
-    //Geral
+    //Goals
     Route::get('/goals', [GoalController::class, 'index']);
     Route::post('/goals', [GoalController::class, 'store']);
     Route::put('/goals/{id}', [GoalController::class, 'update']);
-    Route::delete('/goals/{id}', [GoalController::class, 'destroy']);    Route::post('/recognize-category', [CategoryRecognitionController::class, 'recognize']);
+    Route::delete('/goals/{id}', [GoalController::class, 'destroy']);
+
+    //export/prefs
     Route::get('/export/excel', [ExportController::class, 'exportExcel']);
     Route::get('/export/pdf', [ExportController::class, 'exportPDF']);
     Route::get('/user/preferences', [UserPreferenceController::class, 'show']);
     Route::put('/user/preferences', [UserPreferenceController::class, 'update']);
 
     //AUTOMATION
-    Route::middleware('auth:sanctum')->group(function () {
-        Route::get('/automation-rules', [AutomationRuleController::class, 'index']);
-        Route::post('/automation-rules', [AutomationRuleController::class, 'store']);
-        Route::put('/automation-rules/{automationRule}', [AutomationRuleController::class, 'update']);
-        Route::delete('/automation-rules/{automationRule}', [AutomationRuleController::class, 'destroy']);
-    });
+    Route::get('/automation-rules', [AutomationRuleController::class, 'index']);
+    Route::post('/automation-rules', [AutomationRuleController::class, 'store']);
+    Route::put('/automation-rules/{automationRule}', [AutomationRuleController::class, 'update']);
+    Route::delete('/automation-rules/{automationRule}', [AutomationRuleController::class, 'destroy']);
+
 });
