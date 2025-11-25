@@ -198,7 +198,7 @@ export default function Login({ status = "", canResetPassword = true }) {
             }
             className="rounded-md border px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 dark:border-gray-600"
           >
-            Google
+            <img src="/img/google-icon.png" alt="Google" className="w-5 h-5 mr-2" />
           </button>
           <button
             type="button"
@@ -207,7 +207,7 @@ export default function Login({ status = "", canResetPassword = true }) {
             }
             className="rounded-md border px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 dark:border-gray-600"
           >
-            GitHub
+            <img src="/img/github-icon.png" alt="GitHub" className="w-5 h-5 mr-2" />
           </button>
         </div>
       </div>

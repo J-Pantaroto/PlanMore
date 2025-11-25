@@ -18,8 +18,8 @@ class UserPreferenceController extends Controller
             'theme' => 'light',
             'language' => 'pt',
             'emailNotifications' => false,
-            'updateNotifications' => false,
-            'transactionAlerts' => false,
+            'telegramEnabled' => false,
+            'telegramChatId' => '',
         ];
 
         return response()->json(array_merge($defaults, $prefs));
@@ -33,8 +33,8 @@ class UserPreferenceController extends Controller
             'theme' => 'nullable|in:light,dark',
             'language' => 'nullable|in:pt,en',
             'emailNotifications' => 'boolean',
-            'updateNotifications' => 'boolean',
-            'transactionAlerts' => 'boolean',
+            'telegramEnabled' => 'boolean',
+            'telegramChatId' => 'array',
         ]);
 
         $prefs = is_array($user->preferences)
@@ -49,7 +49,7 @@ class UserPreferenceController extends Controller
         app()->setLocale($updated['language'] ?? 'pt');
 
         return response()->json([
-            'message' => 'Preferências atualizadas com sucesso',
+            'message' => 'PreferÃªncias atualizadas com sucesso',
             'preferences' => $updated,
         ]);
     }

@@ -1,22 +1,16 @@
 import { useState, useEffect } from "react";
 import i18n from "../../i18n/config";
 
-/**
- * Hook central de preferências do usuário (versão fetch + Sanctum)
- * - Sincroniza com o backend (/api/user/preferences)
- * - Persiste localmente (localStorage)
- * - Aplica o tema manualmente com Tailwind darkMode: 'class'
- * - Corrige erro 419 (token CSRF) enviando cabeçalho X-XSRF-TOKEN
- */
+const DEFAULT_PREFS = {
+  theme: "light",
+  language: "pt",
+  emailNotifications: false,
+  telegramEnabled: false,
+  telegramChatId: "",
+};
 
 export default function usePreferences() {
-  const [prefs, setPrefs] = useState({
-    theme: "light",
-    language: "pt",
-    emailNotifications: false,
-    updateNotifications: false,
-    transactionAlerts: false,
-  });
+  const [prefs, setPrefs] = useState(DEFAULT_PREFS);
   const [loading, setLoading] = useState(true);
 
   const applyTheme = (theme) => {
@@ -34,9 +28,6 @@ export default function usePreferences() {
     }
   };
 
-  /**
-   * Faz requisições autenticadas com suporte CSRF do Sanctum
-   */
   const fetchWithCsrf = async (url, options = {}) => {
     const BASE_URL = "http://localhost:8000";
 
@@ -62,16 +53,21 @@ export default function usePreferences() {
     });
   };
 
-  /**
-   * Carrega preferências ao iniciar
-   */
   useEffect(() => {
     const local = localStorage.getItem("userPrefs");
     if (local) {
       try {
         const parsed = JSON.parse(local);
-        setPrefs(parsed);
-        applyTheme(parsed.theme);
+        const merged = {
+          ...DEFAULT_PREFS,
+          ...parsed,
+        };
+        setPrefs(merged);
+        applyTheme(merged.theme);
+        if (merged.language && merged.language !== i18n.language) {
+          i18n.changeLanguage(merged.language);
+          localStorage.setItem("language", merged.language);
+        }
       } catch {
         console.warn("Falha ao ler preferências locais");
       }
@@ -81,12 +77,21 @@ export default function usePreferences() {
       .then(async (res) => {
         if (!res.ok) throw new Error("Falha ao carregar preferências");
         const data = await res.json();
-        setPrefs(data);
-        if (data.theme && data.theme !== prefs.theme) {
-          applyTheme(data.theme);
+
+        const merged = {
+          ...DEFAULT_PREFS,
+          ...(data || {}),
+        };
+
+        setPrefs(merged);
+        applyTheme(merged.theme);
+
+        if (merged.language && merged.language !== i18n.language) {
+          i18n.changeLanguage(merged.language);
+          localStorage.setItem("language", merged.language);
         }
-        applyTheme(data.theme);
-        localStorage.setItem("userPrefs", JSON.stringify(data));
+
+        localStorage.setItem("userPrefs", JSON.stringify(merged));
       })
       .catch(() => {
         console.warn("Sem conexão com backend — usando preferências locais");
@@ -94,12 +99,12 @@ export default function usePreferences() {
       .finally(() => setLoading(false));
   }, []);
 
-  /**
-   * Atualiza preferências no estado, localStorage e backend
-   */
-
   const updatePrefs = async (newPrefs) => {
-    const updated = { ...prefs, ...newPrefs };
+    const updated = {
+      ...prefs,
+      ...newPrefs,
+    };
+
     setPrefs(updated);
     applyTheme(updated.theme);
     localStorage.setItem("userPrefs", JSON.stringify(updated));
@@ -120,16 +125,9 @@ export default function usePreferences() {
     }
   };
 
-
- 
   const resetPrefs = async () => {
-    const defaults = {
-      theme: "light",
-      language: "pt",
-      emailNotifications: false,
-      updateNotifications: false,
-      transactionAlerts: false,
-    };
+    const defaults = { ...DEFAULT_PREFS };
+
     setPrefs(defaults);
     applyTheme(defaults.theme);
     localStorage.setItem("userPrefs", JSON.stringify(defaults));

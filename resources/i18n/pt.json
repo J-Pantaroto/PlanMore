@@ -98,7 +98,8 @@
     "update_notifications": "Avisos de atualização",
     "transaction_alerts": "Alertas de transações",
     "save": "Salvar",
-    "reset": "Restaurar padrão"
+    "reset": "Restaurar padrão",
+    "telegram_notifications": "Notificações por telegram"
   },
   "account": {
     "profile": "Editar Perfil",

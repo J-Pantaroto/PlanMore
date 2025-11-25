@@ -25,9 +25,10 @@ Chart.register(
 );
 
 const toISO = (d) => d.toISOString().slice(0, 10);
-const startOfMonth = (d = new Date()) => new Date(d.getFullYear(), d.getMonth(), 1);
-const endOfMonth = (d = new Date()) => new Date(d.getFullYear(), d.getMonth() + 1, 0);
-
+const startOfMonth = (d = new Date()) =>
+  new Date(d.getFullYear(), d.getMonth(), 1);
+const endOfMonth = (d = new Date()) =>
+  new Date(d.getFullYear(), d.getMonth() + 1, 0);
 
 function HelpTip({ title, children }) {
   const [open, setOpen] = React.useState(false);
@@ -49,7 +50,6 @@ function HelpTip({ title, children }) {
         ?
       </button>
 
-      {/* Tooltip */}
       <div
         id={id}
         role="tooltip"
@@ -62,9 +62,11 @@ function HelpTip({ title, children }) {
                     transition-opacity`}
       >
         {children}
-        <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2
+        <div
+          className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2
                         rotate-45 bg-white dark:bg-slate-800
-                        border-l border-t border-slate-200 dark:border-slate-700" />
+                        border-l border-t border-slate-200 dark:border-slate-700"
+        />
       </div>
     </span>
   );
@@ -80,6 +82,18 @@ export default function Dashboard() {
     to: toISO(endOfMonth(new Date())),
     type: "",
   }));
+
+  // 🔹 URLs de export respeitando filtros (AGORA DENTRO DO COMPONENTE)
+  const exportQuery = useMemo(() => {
+    const params = new URLSearchParams();
+    if (filters.from) params.set("from", filters.from);
+    if (filters.to) params.set("to", filters.to);
+    if (filters.type) params.set("type", filters.type);
+    return params.toString();
+  }, [filters]);
+
+  const excelUrl = `/api/export/excel${exportQuery ? `?${exportQuery}` : ""}`;
+  const pdfUrl = `/api/export/pdf${exportQuery ? `?${exportQuery}` : ""}`;
 
   const applyPreset = (preset) => {
     const today = new Date();
@@ -132,12 +146,17 @@ export default function Dashboard() {
       try {
         const qs = new URLSearchParams(
           Object.fromEntries(
-            Object.entries(filters).filter(([_, v]) => v !== "" && v !== null && v !== undefined)
+            Object.entries(filters).filter(
+              ([_, v]) => v !== "" && v !== null && v !== undefined
+            )
           )
         ).toString();
 
         const response = await fetch(`/api/dashboard?${qs}`, {
-          headers: { "Content-Type": "application/json", Accept: "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
           credentials: "include",
         });
         if (!response.ok) throw new Error("Erro ao carregar dados do dashboard");
@@ -154,11 +173,17 @@ export default function Dashboard() {
         setRunwayDias(data.runway_dias ?? null);
 
         const parc = data.parcelas || { qtd: 0, valor: 0 };
-        setParcelasInfo({ qtd: Number(parc.qtd) || 0, valor: Number(parc.valor) || 0 });
+        setParcelasInfo({
+          qtd: Number(parc.qtd) || 0,
+          valor: Number(parc.valor) || 0,
+        });
 
-        setTopCategorias(Array.isArray(data.top_categorias) ? data.top_categorias : []);
-        setSerieDiaria(Array.isArray(data.serie_diaria) ? data.serie_diaria : []);
-
+        setTopCategorias(
+          Array.isArray(data.top_categorias) ? data.top_categorias : []
+        );
+        setSerieDiaria(
+          Array.isArray(data.serie_diaria) ? data.serie_diaria : []
+        );
       } catch (e) {
         setErr(e.message || String(e));
       } finally {
@@ -179,7 +204,9 @@ export default function Dashboard() {
 
     const labels = serieDiaria.map((d) => d.date);
     const entradasDs = serieDiaria.map((d) => Number(d.entradas) || 0);
-    const saidasDs = serieDiaria.map((d) => Number(d["saídas"]) || Number(d.saidas) || 0);
+    const saidasDs = serieDiaria.map(
+      (d) => Number(d["saídas"]) || Number(d.saidas) || 0
+    );
 
     const ctx = chartRef.current.getContext("2d");
     chartInstance.current = new Chart(ctx, {
@@ -226,7 +253,10 @@ export default function Dashboard() {
             ticks: {
               color: "#94a3b8",
               callback: (v) =>
-                (Number(v) || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" }),
+                (Number(v) || 0).toLocaleString("pt-BR", {
+                  style: "currency",
+                  currency: "BRL",
+                }),
             },
             grid: { color: "rgba(148,163,184,0.1)" },
           },
@@ -236,9 +266,17 @@ export default function Dashboard() {
   }, [serieDiaria, t]);
 
   const fmtValor = (n) =>
-    (Number(n) || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+    (Number(n) || 0).toLocaleString("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+    });
+
   const saldoPeriodoColor =
-    saldoPeriodo > 0 ? "text-green-500" : saldoPeriodo < 0 ? "text-red-500" : "text-slate-900 dark:text-white";
+    saldoPeriodo > 0
+      ? "text-green-500"
+      : saldoPeriodo < 0
+      ? "text-red-500"
+      : "text-slate-900 dark:text-white";
 
   return (
     <Shell>
@@ -246,6 +284,7 @@ export default function Dashboard() {
         {t("dashboard.title")}
       </h1>
 
+      {/* Filtros */}
       <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow mb-6 transition-colors">
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -256,7 +295,9 @@ export default function Dashboard() {
               <input
                 type="date"
                 value={filters.from}
-                onChange={(e) => setFilters((f) => ({ ...f, from: e.target.value }))}
+                onChange={(e) =>
+                  setFilters((f) => ({ ...f, from: e.target.value }))
+                }
                 className="w-full border rounded px-3 py-2 bg-white dark:bg-gray-900 text-slate-900 dark:text-white border-gray-200 dark:border-gray-700"
               />
             </div>
@@ -267,7 +308,9 @@ export default function Dashboard() {
               <input
                 type="date"
                 value={filters.to}
-                onChange={(e) => setFilters((f) => ({ ...f, to: e.target.value }))}
+                onChange={(e) =>
+                  setFilters((f) => ({ ...f, to: e.target.value }))
+                }
                 className="w-full border rounded px-3 py-2 bg-white dark:bg-gray-900 text-slate-900 dark:text-white border-gray-200 dark:border-gray-700"
               />
             </div>
@@ -277,7 +320,9 @@ export default function Dashboard() {
               </label>
               <select
                 value={filters.type}
-                onChange={(e) => setFilters((f) => ({ ...f, type: e.target.value }))}
+                onChange={(e) =>
+                  setFilters((f) => ({ ...f, type: e.target.value }))
+                }
                 className="w-full border rounded px-3 py-2 bg-white dark:bg-gray-900 text-slate-900 dark:text-white border-gray-200 dark:border-gray-700"
               >
                 <option value="">{t("common.all") || "Todos"}</option>
@@ -322,6 +367,7 @@ export default function Dashboard() {
         )}
       </div>
 
+      {/* Cards principais */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
         <div className="bg-white dark:bg-gray-800 p-5 rounded-lg shadow transition-colors">
           <h3 className="text-gray-500 dark:text-gray-300 text-sm">
@@ -332,27 +378,40 @@ export default function Dashboard() {
           </p>
         </div>
         <div className="bg-white dark:bg-gray-800 p-5 rounded-lg shadow transition-colors">
-          <h3 className="text-gray-500 dark:text-gray-300 text-sm">{t("dashboard.income")}</h3>
-          <p className="text-2xl font-bold mt-1 text-green-500">{fmtValor(entradasPeriodo)}</p>
+          <h3 className="text-gray-500 dark:text-gray-300 text-sm">
+            {t("dashboard.income")}
+          </h3>
+          <p className="text-2xl font-bold mt-1 text-green-500">
+            {fmtValor(entradasPeriodo)}
+          </p>
         </div>
         <div className="bg-white dark:bg-gray-800 p-5 rounded-lg shadow transition-colors">
-          <h3 className="text-gray-500 dark:text-gray-300 text-sm">{t("dashboard.expense")}</h3>
-          <p className="text-2xl font-bold mt-1 text-red-500">{fmtValor(saidasPeriodo)}</p>
+          <h3 className="text-gray-500 dark:text-gray-300 text-sm">
+            {t("dashboard.expense")}
+          </h3>
+          <p className="text-2xl font-bold mt-1 text-red-500">
+            {fmtValor(saidasPeriodo)}
+          </p>
         </div>
         <div className="bg-white dark:bg-gray-800 p-5 rounded-lg shadow transition-colors">
           <h3 className="text-gray-500 dark:text-gray-300 text-sm">
             {t("dashboard.period_balance") || "Saldo do período"}
           </h3>
-          <p className={`text-2xl font-bold mt-1 ${saldoPeriodoColor}`}>{fmtValor(saldoPeriodo)}</p>
+          <p className={`text-2xl font-bold mt-1 ${saldoPeriodoColor}`}>
+            {fmtValor(saldoPeriodo)}
+          </p>
         </div>
       </div>
 
+      {/* Burn rate / Runway / Parcelas */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <div className="bg-white dark:bg-gray-800 p-5 rounded-lg shadow transition-colors">
           <h3 className="text-gray-500 dark:text-gray-300 text-sm flex items-center">
             {t("dashboard.burn_rate") || "Burn rate (por dia)"}
             <HelpTip title={t("help.more_info")}>
-              <span className="font-semibold block mb-1">{t("dashboard.burn_rate")}</span>
+              <span className="font-semibold block mb-1">
+                {t("dashboard.burn_rate")}
+              </span>
               <span className="block">{t("help.burn_rate")}</span>
             </HelpTip>
           </h3>
@@ -365,7 +424,9 @@ export default function Dashboard() {
           <h3 className="text-gray-500 dark:text-gray-300 text-sm flex items-center">
             {t("dashboard.runway_days") || "Runway (dias)"}
             <HelpTip title={t("help.more_info")}>
-              <span className="font-semibold block mb-1">{t("dashboard.runway_days")}</span>
+              <span className="font-semibold block mb-1">
+                {t("dashboard.runway_days")}
+              </span>
               <span className="block">{t("help.runway")}</span>
             </HelpTip>
           </h3>
@@ -378,26 +439,29 @@ export default function Dashboard() {
             {t("dashboard.installments") || "Parcelas (no período)"}
           </h3>
           <p className="text-xl font-semibold mt-1 text-slate-900 dark:text-white">
-            {parcelasInfo.qtd} {t("common.count") || "itens"} · {fmtValor(parcelasInfo.valor)}
+            {parcelasInfo.qtd} {t("common.count") || "itens"} ·{" "}
+            {fmtValor(parcelasInfo.valor)}
           </p>
         </div>
       </div>
 
+      {/* Botões de export */}
       <div className="flex flex-wrap gap-3 mb-8">
         <a
-          href="/api/export/excel"
+          href={excelUrl}
           className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition"
         >
           {t("dashboard.export_excel")}
         </a>
         <a
-          href="/api/export/pdf"
+          href={pdfUrl}
           className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition"
         >
           {t("dashboard.export_pdf")}
         </a>
       </div>
 
+      {/* Gráfico + lista de categorias */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="bg-white dark:bg-gray-800 p-5 rounded-lg shadow col-span-2 transition-colors">
           <div className="flex items-center justify-between mb-4">
@@ -424,8 +488,12 @@ export default function Dashboard() {
                   key={`${cat.categoria}-${i}`}
                   className="flex items-center justify-between text-sm text-gray-700 dark:text-gray-200"
                 >
-                  <span className="truncate">{cat.categoria || t("transactions.no_records")}</span>
-                  <span className="font-semibold">{fmtValor(cat.total)}</span>
+                  <span className="truncate">
+                    {cat.categoria || t("transactions.no_records")}
+                  </span>
+                  <span className="font-semibold">
+                    {fmtValor(cat.total)}
+                  </span>
                 </li>
               ))
             ) : (

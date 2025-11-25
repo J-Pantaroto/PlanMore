@@ -98,7 +98,8 @@
     "update_notifications": "Update alerts",
     "transaction_alerts": "Transaction alerts",
     "save": "Save",
-    "reset": "Restore default"
+    "reset": "Restore default",
+    "telegram_notifications": "Telegram notifications"
   },
   "account": {
     "profile": "Edit Profile",
